@@ -1,3 +1,5 @@
+import { isUserInChat } from "./utils/isUserInChat";
+
 console.log("ENTRY OK");
 
 import "dotenv/config";
@@ -80,6 +82,17 @@ bot.start(async (ctx) => {
   if (ctx.chat.type !== "private") return;
 
   const user = ctx.from;
+
+  if (await isUserInChat(bot, GROUP_ID, user.id)) {
+    await ctx.reply("✅ Вы уже состоите в чате.");
+    return;
+  }
+
+  const existing = userRequests.get(user.id);
+  if (existing && existing.status === "pending") {
+    await ctx.reply("⏳ Ваша заявка ещё на рассмотрении у администраторов.");
+    return;
+  }
 
   const prev = userRequests.get(user.id) || {};
   const requestCount = (prev.request_count || 0) + 1;
