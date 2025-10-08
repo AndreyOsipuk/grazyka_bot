@@ -1,4 +1,4 @@
-import type { Message } from "telegraf/typings/core/types/typegram";
+import type { Message } from "typegram";
 
 export function messageHasPhoto(msg: Message) {
   const hasPhoto =
