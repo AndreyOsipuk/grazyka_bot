@@ -79,11 +79,10 @@ bot.start(async (ctx) => {
 
   const user = ctx.from;
 
-  userRequests.delete(user.id);
-  userInviteLinks.delete(user.id);
-
   const prev = userRequests.get(user.id) || {};
   const requestCount = (prev.request_count || 0) + 1;
+
+  userInviteLinks.delete(user.id);
 
   userRequests.set(user.id, {
     username: user.username,
