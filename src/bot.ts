@@ -89,7 +89,8 @@ bot.start(async (ctx) => {
   }
 
   const existing = userRequests.get(user.id);
-  if (existing && existing.status === "pending") {
+
+  if (existing?.status === "pending") {
     await ctx.reply("⏳ Ваша заявка ещё на рассмотрении у администраторов.");
     return;
   }
@@ -108,7 +109,7 @@ bot.start(async (ctx) => {
     join_time: null,
     request_count: requestCount,
     extra_answer: null,
-    status: "pending",
+    status: "created",
   });
 
   await ctx.reply(rulesText, {
