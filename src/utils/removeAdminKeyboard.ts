@@ -12,18 +12,14 @@ export async function removeAdminKeyboard<C>(
   if (!msg) return;
 
   try {
-    // Вариант 1: полностью удалить клавиатуру
     await ctx.telegram.editMessageReplyMarkup(
       msg.chatId,
       msg.messageId,
       undefined,
-      undefined,
+      { inline_keyboard: [] },
     );
 
-    // Вариант 2 (на случай капризов API): установить пустую клавиатуру
-    // await ctx.telegram.editMessageReplyMarkup(msg.chatId, msg.messageId, undefined, { inline_keyboard: [] });
-  } catch (e) {
-    // Если сообщение уже отредактировано/удалено – здесь будет ошибка, игнорируем
-    // console.warn('removeAdminKeyboard error:', e?.description || e);
+  } catch (e: any) {
+    console.error("Не удалось снять inline-клавиатуру:", e?.message || e);
   }
 }
