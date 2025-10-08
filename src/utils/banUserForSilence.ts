@@ -4,7 +4,7 @@ import type { User } from "telegraf/types";
 import { clearSilenceTimer } from "./clearSilenceTimer";
 import { ADMIN_GROUP_ID, escapeHtml, TIME_LIMIT_MINUTES } from "./index";
 
-export async function banUserForSilence<C, Filter>(
+export const banUserForSilence = async (
   ctx: Context,
   user: User,
   joinTime: Date,
@@ -21,7 +21,7 @@ export async function banUserForSilence<C, Filter>(
     }
   >,
   silenceTimers: Map<number, NodeJS.Timeout>,
-) {
+) => {
   try {
     const until = Math.floor((Date.now() + 24 * 3600 * 1000) / 1000); // +1 день
     await ctx.telegram.banChatMember(GROUP_ID, user.id, until);
@@ -53,4 +53,4 @@ export async function banUserForSilence<C, Filter>(
   } catch (e) {
     console.error("Ошибка бана пользователя:", e);
   }
-}
+};

@@ -7,6 +7,6 @@ export type UserRequest = {
   join_time?: Date | null;
   request_count?: number;
   extra_answer?: string | null;
-  status?: 'pending' | 'approved' | 'rejected';
-  adminMsg?: { chatId: number; messageId: number };
+  status?: "pending" | "approved" | "rejected";
+  adminMsg?: { chatId: number; messageId: number; text: string };
 };

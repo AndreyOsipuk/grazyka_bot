@@ -1,3 +1,5 @@
+console.log("ENTRY OK");
+
 import "dotenv/config";
 
 import { Markup, Telegraf } from "telegraf";
@@ -14,11 +16,11 @@ import {
 } from "./utils";
 import { banUserForSilence } from "./utils/banUserForSilence";
 import { clearSilenceTimer } from "./utils/clearSilenceTimer";
+import { closeAdminRequest } from "./utils/closeAdminRequest";
 import { generateNewInviteLink } from "./utils/generateNewInviteLink";
 import { isUserBanned } from "./utils/isUserBanned";
 import { messageHasPhoto } from "./utils/messageHasPhoto";
 import { pluralizeMinutes } from "./utils/pluralizeMinutes";
-import { removeAdminKeyboard } from "./utils/removeAdminKeyboard";
 import { sendRequestToAdmins } from "./utils/sendRequestToAdmins";
 
 const { message } = pkg;
@@ -166,20 +168,17 @@ bot.action(/^(approve|reject)_(\d+)$/, async (ctx) => {
   const [, action, targetIdStr] = ctx.match;
   const targetId = Number(targetIdStr);
   const userInfo = userRequests.get(targetId);
+
   if (!userInfo) {
-    await removeAdminKeyboard(ctx, targetId, userRequests);
     return ctx.editMessageText("❌ Пользователь не найден или запрос устарел.");
   }
 
   if (userInfo.status && userInfo.status !== "pending") {
-    await removeAdminKeyboard(ctx, targetId, userRequests);
     return ctx.answerCbQuery(
       `Заявка уже ${userInfo.status === "approved" ? "одобрена" : "отклонена"}.`,
       { show_alert: true },
     );
   }
-
-  await removeAdminKeyboard(ctx, targetId, userRequests);
 
   if (action === "approve") {
     userInfo.approved = true;
@@ -198,7 +197,10 @@ bot.action(/^(approve|reject)_(\d+)$/, async (ctx) => {
       );
     }
 
-    await ctx.editMessageText(
+    await closeAdminRequest(
+      ctx,
+      targetId,
+      userRequests,
       `✅ Запрос от ${userInfo.first_name || targetId} одобрен администратором ${admin.first_name}\n🔗 Новая ссылка отправлена пользователю`,
     );
 
@@ -237,7 +239,10 @@ bot.action(/^(approve|reject)_(\d+)$/, async (ctx) => {
     userInfo.status = "rejected";
     userRequests.set(targetId, userInfo);
 
-    await ctx.editMessageText(
+    await closeAdminRequest(
+      ctx,
+      targetId,
+      userRequests,
       `❌ Запрос от ${userInfo.first_name || targetId} отклонен администратором ${admin.first_name}`,
     );
 

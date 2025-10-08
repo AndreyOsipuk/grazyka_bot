@@ -1,6 +1,6 @@
 import type { Context } from "telegraf";
 
-export async function generateNewInviteLink<C>(
+export async function generateNewInviteLink(
   ctx: Context,
   userId: number,
   GROUP_ID: number,

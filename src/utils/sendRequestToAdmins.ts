@@ -43,7 +43,7 @@ export async function sendRequestToAdmins(
     const prev = userRequests.get(userId) || {};
     userRequests.set(userId, {
       ...prev,
-      adminMsg: { chatId: sent.chat.id, messageId: sent.message_id },
+      adminMsg: { chatId: sent.chat.id, messageId: sent.message_id, text },
       status: "pending",
     });
   } catch (e) {

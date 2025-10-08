@@ -3,8 +3,11 @@
   "version": "1.0.0",
   "description": "",
   "main": "src/bot.ts",
+  "type": "module",
   "scripts": {
-    "dev": "tsx watch src/bot.ts",
+    "dev": "run-p dev:serve dev:tsc",
+    "dev:serve": "tsx watch src/bot.ts",
+    "dev:tsc": "tsc --noEmit --watch",
     "start": "tsx src/bot.ts"
   },
   "repository": {
@@ -14,14 +17,14 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "type": "module",
   "bugs": {
     "url": "https://github.com/AndreyOsipuk/grazyka_bot/issues"
   },
   "homepage": "https://github.com/AndreyOsipuk/grazyka_bot#readme",
   "dependencies": {
     "dotenv": "^17.2.3",
-    "telegraf": "^4.16.3"
+    "telegraf": "^4.16.3",
+    "ts-node": "^10.9.2"
   },
   "devDependencies": {
     "@eslint/js": "^9.37.0",
