@@ -1,0 +1,26 @@
+{
+  "name": "tg",
+  "version": "1.0.0",
+  "description": "",
+  "main": "bot.js",
+  "scripts": {
+    "start": "node bot.js",
+    "dev": "node --watch bot.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/AndreyOsipuk/grazyka_bot.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "bugs": {
+    "url": "https://github.com/AndreyOsipuk/grazyka_bot/issues"
+  },
+  "homepage": "https://github.com/AndreyOsipuk/grazyka_bot#readme",
+  "dependencies": {
+    "dotenv": "^17.2.3",
+    "telegraf": "^4.16.3"
+  }
+}
