@@ -98,8 +98,6 @@ bot.start(async (ctx) => {
     status: "pending",
   });
 
-  await ctx.reply("✅ Верно! Ниже — правила и кнопка подтверждения.");
-
   await ctx.reply(rulesText, {
     parse_mode: "HTML",
     ...Markup.inlineKeyboard([
