@@ -115,6 +115,7 @@ bot.on(message('text'), async (ctx, next) => {
         join_time: null,
         request_count: requestCount,
         extra_answer: null,
+        status: 'pending',
     });
 
     await ctx.reply(
@@ -203,7 +204,14 @@ async function sendRequestToAdmins(ctx, userId, inviteLink) {
     ]);
 
     try {
-        await ctx.telegram.sendMessage(ADMIN_GROUP_ID, text, { parse_mode: 'HTML', ...kb });
+        const sent = await ctx.telegram.sendMessage(ADMIN_GROUP_ID, text, { parse_mode: 'HTML', ...kb });
+
+        const prev = userRequests.get(userId) || {};
+        userRequests.set(userId, {
+            ...prev,
+            adminMsg: { chatId: sent.chat.id, messageId: sent.message_id },
+            status: 'pending'
+        });
     } catch (e) {
         console.error(`Ошибка отправки в ADMIN_GROUP_ID=${ADMIN_GROUP_ID}:`, e);
     }
@@ -211,6 +219,10 @@ async function sendRequestToAdmins(ctx, userId, inviteLink) {
 
 // === Обработка approve/reject ===
 bot.action(/^(approve|reject)_(\d+)$/, async (ctx) => {
+    if (ctx.chat?.id !== ADMIN_GROUP_ID) {
+        return;
+    }
+
     const admin = ctx.from;
     if (!isAdmin(admin.id)) {
         return ctx.answerCbQuery('❌ У вас нет прав для этого действия!', { show_alert: true });
@@ -220,11 +232,23 @@ bot.action(/^(approve|reject)_(\d+)$/, async (ctx) => {
     const targetId = Number(targetIdStr);
     const userInfo = userRequests.get(targetId);
     if (!userInfo) {
+        await removeAdminKeyboard(ctx, targetId);
         return ctx.editMessageText('❌ Пользователь не найден или запрос устарел.');
     }
 
+    if (userInfo.status && userInfo.status !== 'pending') {
+        await removeAdminKeyboard(ctx, targetId);
+        return ctx.answerCbQuery(
+            `Заявка уже ${userInfo.status === 'approved' ? 'одобрена' : 'отклонена'}.`,
+            { show_alert: true }
+        );
+    }
+
+    await removeAdminKeyboard(ctx, targetId);
+    
     if (action === 'approve') {
         userInfo.approved = true;
+        userInfo.status = 'approved';
         userRequests.set(targetId, userInfo);
 
         const invite = await generateNewInviteLink(ctx, targetId);
@@ -262,6 +286,7 @@ bot.action(/^(approve|reject)_(\d+)$/, async (ctx) => {
         // reject
         userInviteLinks.delete(targetId);
         userInfo.approved = false;
+        userInfo.status = 'rejected';
         userRequests.set(targetId, userInfo);
 
         await ctx.editMessageText(
@@ -423,6 +448,23 @@ function clearSilenceTimer(userId) {
         clearTimeout(t);
         silenceTimers.delete(userId);
     }
+}
+
+async function removeAdminKeyboard(ctx, userId) {
+  const rec = userRequests.get(userId);
+  const msg = rec?.adminMsg;
+  if (!msg) return;
+
+  try {
+    // Вариант 1: полностью удалить клавиатуру
+    await ctx.telegram.editMessageReplyMarkup(msg.chatId, msg.messageId, undefined, undefined);
+
+    // Вариант 2 (на случай капризов API): установить пустую клавиатуру
+    // await ctx.telegram.editMessageReplyMarkup(msg.chatId, msg.messageId, undefined, { inline_keyboard: [] });
+  } catch (e) {
+    // Если сообщение уже отредактировано/удалено – здесь будет ошибка, игнорируем
+    // console.warn('removeAdminKeyboard error:', e?.description || e);
+  }
 }
 
 async function banUserForSilence(ctx, user, joinTime) {
