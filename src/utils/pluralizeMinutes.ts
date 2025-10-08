@@ -1,0 +1,8 @@
+export function pluralizeMinutes(n: number) {
+  const mod10 = n % 10,
+    mod100 = n % 100;
+  if (mod10 === 1 && mod100 !== 11) return "минуту";
+  if ([2, 3, 4].includes(mod10) && ![12, 13, 14].includes(mod100))
+    return "минуты";
+  return "минут";
+}

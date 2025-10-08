@@ -3,7 +3,7 @@ import { type Context, Markup } from "telegraf";
 import type { UserRequest } from "../types";
 import { ADMIN_GROUP_ID, TIME_LIMIT_MINUTES } from "./index";
 
-export async function sendRequestToAdmins<C>(
+export async function sendRequestToAdmins(
   ctx: Context,
   userId: number,
   inviteLink: string | undefined,
