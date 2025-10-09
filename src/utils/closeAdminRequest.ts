@@ -1,6 +1,7 @@
 import type { Context } from "telegraf";
 
 import type { UserRequest } from "../types";
+import { ADMIN_GROUP_ID } from "./index";
 
 export async function closeAdminRequest(
   ctx: Context,
@@ -32,5 +33,7 @@ export async function closeAdminRequest(
     );
   } catch (e) {
     console.error("sendMessage failed:", (e as any)?.message || e);
+
+    await ctx.telegram.sendMessage(ADMIN_GROUP_ID, `❌ sendMessage failed`);
   }
 }

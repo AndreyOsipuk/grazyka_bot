@@ -1,5 +1,7 @@
 import type { Context } from "telegraf";
 
+import { ADMIN_GROUP_ID } from "./index";
+
 export async function generateNewInviteLink(
   ctx: Context,
   userId: number,
@@ -26,6 +28,11 @@ export async function generateNewInviteLink(
     return invite;
   } catch (e) {
     console.error("Ошибка генерации ссылки:", e);
+
+    await ctx.telegram.sendMessage(
+      ADMIN_GROUP_ID,
+      `❌ Ошибка генерации ссылки`,
+    );
     return null;
   }
 }

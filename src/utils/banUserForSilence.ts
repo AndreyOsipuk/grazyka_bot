@@ -3,6 +3,7 @@ import type { User } from "telegraf/types";
 
 import { clearSilenceTimer } from "./clearSilenceTimer";
 import { ADMIN_GROUP_ID, escapeHtml, TIME_LIMIT_MINUTES } from "./index";
+import { pluralizeMinutes } from "./pluralizeMinutes";
 
 export const banUserForSilence = async (
   ctx: Context,
@@ -25,13 +26,14 @@ export const banUserForSilence = async (
   try {
     const until = Math.floor((Date.now() + 24 * 3600 * 1000) / 1000); // +1 день
     await ctx.telegram.banChatMember(GROUP_ID, user.id, until);
+    await ctx.telegram.unbanChatMember(GROUP_ID, user.id);
 
     await ctx.telegram.sendMessage(
       GROUP_ID,
       [
-        `🚫 Пользователь <a href="tg://user?id=${user.id}">${escapeHtml(user.first_name || user.id)}</a> был забанен за нарушение правил.`,
+        `🚫 Пользователь <a href="tg://user?id=${user.id}">${escapeHtml(user.first_name || user.id)}</a> был кикнут за нарушение правил.`,
         "",
-        `❌ <b>Причина:</b> Не написал первое сообщение в течение ${TIME_LIMIT_MINUTES} минут после вступления.`,
+        `❌ <b>Причина:</b> Не написал первое сообщение или не прислал в течение ${pluralizeMinutes(TIME_LIMIT_MINUTES)} после вступления.`,
         `⏰ <b>Время вступления:</b> ${joinTime.toLocaleTimeString("ru-RU")}`,
       ].join("\n"),
       { parse_mode: "HTML" },
@@ -40,7 +42,7 @@ export const banUserForSilence = async (
     try {
       await ctx.telegram.sendMessage(
         ADMIN_GROUP_ID,
-        `🚫 Автоматический бан: ${user.first_name || user.id} (ID: ${user.id}) за молчание`,
+        `🚫 Автоматический кик: ${user.first_name || user.id} (ID: ${user.id}) за молчание`,
       );
     } catch (e) {
       console.error(`Ошибка отправки в ADMIN_GROUP_ID=${ADMIN_GROUP_ID}:`, e);
@@ -52,5 +54,10 @@ export const banUserForSilence = async (
     clearSilenceTimer(user.id, silenceTimers);
   } catch (e) {
     console.error("Ошибка бана пользователя:", e);
+
+    await ctx.telegram.sendMessage(
+      ADMIN_GROUP_ID,
+      `❌ Ошибка бана пользователя`,
+    );
   }
 };
