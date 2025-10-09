@@ -134,7 +134,13 @@ bot.action("agree_rules", async (ctx) => {
     );
     await ctx.telegram.sendMessage(
       ADMIN_GROUP_ID,
-      `⛔️ Пользователь <a href="tg://user?id=${userId}">${userId}</a> пытается зайти, но он в бане.`,
+      `⛔️ Пользователь 
+      ├ ID: <code>${userId}</code>
+      ├ <a href="tg://user?id=${userId}">${userId}</a>
+      ├ Имя: ${user.first_name || "—"}
+      ├ Фамилия: ${user.last_name || "—"}
+      └ Username: @${user.username || "—"}
+      пытается зайти, но он в бане.`,
       { parse_mode: "HTML" },
     );
     return;
