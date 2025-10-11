@@ -282,8 +282,11 @@ bot.action(/^(approve|reject)_(\d+)$/, async (ctx) => {
 
 // === Отслеживание новых участников в группе ===
 bot.on(message("new_chat_members"), async (ctx) => {
-  // Только в нужной группе
   if (!ctx.chat || ctx.chat.id !== GROUP_ID) return;
+
+  if (!isAdmin(ctx.message.from.id)) {
+    return;
+  }
 
   for (const member of ctx.message.new_chat_members) {
     if (member.is_bot) continue;
@@ -335,7 +338,7 @@ bot.on(message("new_chat_members"), async (ctx) => {
       [
         `👋 Добро пожаловать, <a href="tg://user?id=${member.id}">${escapeHtml(member.first_name || "гость")}</a>!`,
         "",
-        `⚠️ <b>Напоминание:</b> Напишите вашу анкету (имя, пол, возраст, город, фото или мем 18+) в течении ${pluralizeMinutes(TIME_LIMIT_MINUTES)}.`,
+        `⚠️ <b>Напоминание:</b> Напишите вашу анкету (имя, пол, возраст, город, фото или мем 18+) в течение ${pluralizeMinutes(TIME_LIMIT_MINUTES)}.`,
         "",
         "⏰ Время пошло!",
       ].join("\n"),
@@ -403,6 +406,7 @@ bot.command("chatid", async (ctx) => {
 bot.on("message", async (ctx) => {
   if (!ctx.chat || ctx.chat.id !== GROUP_ID) return;
   const user = ctx.from;
+
   if (!user || user.is_bot || isAdmin(user.id)) return;
 
   if (
