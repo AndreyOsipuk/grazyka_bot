@@ -12,3 +12,9 @@ export function pluralizeMinutes(n: number) {
 
   return `${n} минут`;
 }
+
+export function pluralizeMinutesGenitive(n: number) {
+  const mod10 = n % 10;
+  const mod100 = n % 100;
+  return mod10 === 1 && mod100 !== 11 ? `${n} минуты` : `${n} минут`;
+}

@@ -2,6 +2,7 @@ import { type Context, Markup } from "telegraf";
 
 import type { UserRequest } from "../types";
 import { ADMIN_GROUP_ID, TIME_LIMIT_MINUTES } from "./index";
+import { pluralizeMinutes, pluralizeMinutesGenitive } from "./pluralizeMinutes";
 
 export async function sendRequestToAdmins(
   ctx: Context,
@@ -22,7 +23,7 @@ export async function sendRequestToAdmins(
     `└ Username: @${u.username || "—"}`,
     `├ Запросов: ${u.request_count || 1}`,
     "",
-    `⚠️ Пользователь согласился с правилами, включая требование первого сообщения в течение ${TIME_LIMIT_MINUTES} минут.`,
+    `⚠️ Пользователь согласился с правилами, включая требование первого сообщения в течение ${pluralizeMinutesGenitive(TIME_LIMIT_MINUTES)} минут.`,
   ].join("\n");
 
   if (inviteLink) {
