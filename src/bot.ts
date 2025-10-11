@@ -284,7 +284,7 @@ bot.action(/^(approve|reject)_(\d+)$/, async (ctx) => {
 bot.on(message("new_chat_members"), async (ctx) => {
   if (!ctx.chat || ctx.chat.id !== GROUP_ID) return;
 
-  if (!isAdmin(ctx.message.from.id)) {
+  if (isAdmin(ctx.message.from.id)) {
     return;
   }
 
@@ -321,7 +321,7 @@ bot.on(message("new_chat_members"), async (ctx) => {
               silenceTimers,
             );
           }
-        } catch (e) {
+        } catch (e: any) {
           console.error("Ошибка в таймере молчания:", e);
 
           await ctx.telegram.sendMessage(
