@@ -10,6 +10,7 @@ import pkg from "telegraf/filters";
 import type { UserRequest } from "./types";
 import {
   ADMIN_GROUP_ID,
+  ADMIN_IDS,
   BOT_TOKEN,
   escapeHtml,
   GROUP_ID,
@@ -245,12 +246,13 @@ bot.action(/^(approve|reject)_(\d+)$/, async (ctx) => {
       await ctx.telegram.sendMessage(targetId, successMsg, {
         parse_mode: "HTML",
       });
-    } catch (e: any) {
+    } catch (e) {
+      const err = e as Error;
       console.error("Ошибка отправки инвайта пользователю:", e);
 
       await ctx.telegram.sendMessage(
         ADMIN_GROUP_ID,
-        `❌ Ошибка отправки ссылки пользователю: ${e.message || e}`,
+        `❌ Ошибка отправки ссылки пользователю: ${err.message || e}`,
       );
     }
   } else {
@@ -324,12 +326,13 @@ bot.on(message("new_chat_members"), async (ctx) => {
               silenceTimers,
             );
           }
-        } catch (e: any) {
+        } catch (e) {
           console.error("Ошибка в таймере молчания:", e);
 
+          const err = e as Error;
           await ctx.telegram.sendMessage(
             ADMIN_GROUP_ID,
-            `❌ Ошибка отправки ссылки пользователю: ${e.message || e}`,
+            `❌ Ошибка отправки ссылки пользователю: ${err.message || e}`,
           );
         }
       },
@@ -438,7 +441,7 @@ bot.on("message", async (ctx) => {
     if (wm) {
       try {
         await ctx.telegram.deleteMessage(wm.chatId, wm.messageId);
-      } catch (e) {
+      } catch {
         // сообщение уже могли удалить/изменить — игнорируем
       } finally {
         welcomeMsgs.delete(user.id);
@@ -455,6 +458,55 @@ bot.on("message", async (ctx) => {
 
     userJoinTimes.delete(user.id);
   }
+});
+
+bot.command("report", async (ctx) => {
+  if (!ctx.chat || ctx.chat.id !== GROUP_ID) {
+    return ctx.reply(
+      "❌ Команду /report можно использовать только в основном чате.",
+    );
+  }
+
+  const user = ctx.from;
+  const reply = ctx.message?.reply_to_message;
+
+  // Проверяем, есть ли текст в сообщении, на которое ответили
+  const replyText =
+    reply && "text" in reply ? reply.text : "(не текстовое сообщение)";
+
+  const adminTags = ADMIN_IDS.map((id) => `[👮‍♂️](tg://user?id=${id})`).join(" ");
+  const chatTitle = "title" in ctx.chat ? ctx.chat.title : "неизвестный чат";
+
+  const publicText = [
+    `🚨 <b>Репорт!</b>`,
+    `От: <a href="tg://user?id=${user.id}">${escapeHtml(user.first_name || "Пользователь")}</a>`,
+    `ID: <code>${user.id}</code>`,
+    "",
+    adminTags,
+    "",
+    `Ответ на сообщение:\n<blockquote>${escapeHtml(replyText)}</blockquote>`,
+  ].join("\n");
+
+  // Сообщение в основном чате
+  await ctx.telegram.sendMessage(ctx.chat.id, publicText, {
+    parse_mode: "HTML",
+  });
+
+  const adminMessage = [
+    "🚨 <b>Новый репорт!</b>",
+    `👤 От: <a href="tg://user?id=${user.id}">${escapeHtml(user.first_name || "Пользователь")}</a>`,
+    `🆔 ID: <code>${user.id}</code>`,
+    `📍 Чат: ${escapeHtml(chatTitle)}`,
+    "",
+    `💬 Сообщение:\n<blockquote>${escapeHtml(replyText)}</blockquote>`,
+    "",
+    `🔗 [Открыть чат](https://t.me/c/${String(GROUP_ID).replace("-100", "")})`,
+  ].join("\n");
+
+  // Отправляем уведомление в админский чат
+  await ctx.telegram.sendMessage(ADMIN_GROUP_ID, adminMessage, {
+    parse_mode: "HTML",
+  });
 });
 
 // === Команда /reset в личке ===
@@ -487,6 +539,16 @@ try {
       { command: "chatid", description: "Показать ID чата" },
     ],
     { scope: { type: "chat", chat_id: ADMIN_GROUP_ID } },
+  );
+
+  await bot.telegram.setMyCommands(
+    [
+      {
+        command: "report",
+        description: "Сообщить о нарушении (reply на сообщение)",
+      },
+    ],
+    { scope: { type: "chat", chat_id: GROUP_ID } },
   );
 } catch (e) {
   console.log("Ошибка запуска", e);

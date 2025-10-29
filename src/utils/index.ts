@@ -1,4 +1,4 @@
-const ADMIN_IDS: number[] = (process.env.ADMIN_IDS || "")
+export const ADMIN_IDS: number[] = (process.env.ADMIN_IDS || "")
   .split(/[\s,]+/)
   .map((v) => Number(v))
   .filter((n) => Number.isFinite(n));
