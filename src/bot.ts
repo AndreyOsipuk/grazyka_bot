@@ -11,6 +11,7 @@ import type { UserRequest } from "./types";
 import {
   ADMIN_GROUP_ID,
   ADMIN_IDS,
+  ADMIN_USERNAMES,
   BOT_TOKEN,
   escapeHtml,
   GROUP_ID,
@@ -408,6 +409,126 @@ bot.command("chatid", async (ctx) => {
   }
 });
 
+bot.hears(/^report$/i, async (ctx) => {
+  if (!ctx.chat || ctx.chat.id !== GROUP_ID) {
+    return;
+  }
+
+  const user = ctx.from;
+  const reply = ctx.message?.reply_to_message;
+
+  // Проверяем, что команда используется в ответ на сообщение
+  if (!reply) {
+    return ctx.reply(
+      "❌ Пожалуйста, используйте команду /report в ответ на сообщение, которое хотите пожаловаться.",
+      {
+        reply_parameters: {
+          message_id: ctx.message.message_id,
+        },
+      },
+    );
+  }
+
+  try {
+    // Получаем текст сообщения, на которое ответили
+    let replyText = "";
+    if ("text" in reply) {
+      replyText = reply.text || "";
+    } else if ("caption" in reply && reply.caption) {
+      replyText = reply.caption;
+    } else {
+      replyText = "⏺️ Медиа-сообщение (фото, видео и т.д.)";
+    }
+
+    // Обрезаем длинный текст
+    if (replyText.length > 500) {
+      replyText = replyText.substring(0, 500) + "...";
+    }
+
+    const chatTitle = "title" in ctx.chat ? ctx.chat.title : "неизвестный чат";
+
+    let adminMentions = "";
+
+    if (ADMIN_USERNAMES.length > 0) {
+      // Используем формат с тегами <a> для кликабельных упоминаний
+      adminMentions = ADMIN_USERNAMES.map(
+        (username) => `<a href="https://t.me/${username}">@${username}</a>`,
+      ).join(" ");
+    } else {
+      // Запасной вариант через ID
+      adminMentions = ADMIN_IDS.map(
+        (id) => `<a href="tg://user?id=${id}">👮‍♂️</a>`,
+      ).join(" ");
+    }
+
+    // Сообщение в основном чате
+    const publicText = [
+      `🚨 <b>Репорт от пользователя!</b>`,
+      `👤 От: <a href="tg://user?id=${user.id}">${escapeHtml(user.first_name || "Пользователь")}</a>`,
+      `💬 На сообщение:`,
+      `<blockquote>${escapeHtml(replyText)}</blockquote>`,
+      "",
+      `${adminMentions} - проверьте, пожалуйста`,
+      `🔗 [Перейти к сообщению](https://t.me/c/${String(GROUP_ID).replace("-100", "")}/${reply.message_id})`,
+    ].join("\n");
+
+    await ctx.replyWithHTML(publicText, {
+      reply_parameters: {
+        message_id: ctx.message.message_id,
+      },
+    });
+
+    let adminChatMentions = "";
+
+    if (ADMIN_USERNAMES.length > 0) {
+      adminChatMentions = ADMIN_USERNAMES.map(
+        (username) => `<a href="https://t.me/${username}">@${username}</a>`,
+      ).join(" ");
+    } else {
+      adminChatMentions = ADMIN_IDS.map(
+        (id) => `<a href="tg://user?id=${id}">👮‍♂️</a>`,
+      ).join(" ");
+    }
+
+    // Сообщение в админском чате
+    const adminMessage = [
+      `${adminChatMentions}`,
+      "🚨 <b>Новый репорт в чате!</b>",
+      `👤 От: <a href="tg://user?id=${user.id}">${escapeHtml(user.first_name || "Пользователь")}</a>`,
+      `🆔 ID: <code>${user.id}</code>`,
+      `📍 Чат: ${escapeHtml(chatTitle)}`,
+      "",
+      `💬 Сообщение, на которое пожаловались:\n<blockquote>${escapeHtml(replyText)}</blockquote>`,
+      "",
+      `👤 Автор сообщения: ${reply.from?.first_name || "Неизвестно"} (ID: ${reply.from?.id || "Неизвестно"})`,
+      "",
+      `🔗 [Перейти к сообщению](https://t.me/c/${String(GROUP_ID).replace("-100", "")}/${reply.message_id})`,
+    ].join("\n");
+
+    await ctx.telegram.sendMessage(ADMIN_GROUP_ID, adminMessage, {
+      parse_mode: "HTML",
+    });
+
+    console.log(`✅ Репорт отправлен от пользователя ${user.id}`);
+  } catch (error) {
+    console.error("Ошибка при обработке репорта:", error);
+
+    try {
+      await ctx.reply(
+        "❌ Произошла ошибка при отправке репорта. Попробуйте позже.",
+        {
+          reply_parameters: {
+            message_id: ctx.message.message_id,
+          },
+        },
+      );
+    } catch (e) {
+      // Если не можем ответить, просто логируем
+      console.error("Не могу отправить сообщение об ошибке:", e);
+    }
+  }
+});
+
 // === Отслеживание сообщений пользователей в группе ===
 bot.on("message", async (ctx) => {
   if (!ctx.chat || ctx.chat.id !== GROUP_ID) return;
@@ -458,55 +579,6 @@ bot.on("message", async (ctx) => {
 
     userJoinTimes.delete(user.id);
   }
-});
-
-bot.command("report", async (ctx) => {
-  if (!ctx.chat || ctx.chat.id !== GROUP_ID) {
-    return ctx.reply(
-      "❌ Команду /report можно использовать только в основном чате.",
-    );
-  }
-
-  const user = ctx.from;
-  const reply = ctx.message?.reply_to_message;
-
-  // Проверяем, есть ли текст в сообщении, на которое ответили
-  const replyText =
-    reply && "text" in reply ? reply.text : "(не текстовое сообщение)";
-
-  const adminTags = ADMIN_IDS.map((id) => `[👮‍♂️](tg://user?id=${id})`).join(" ");
-  const chatTitle = "title" in ctx.chat ? ctx.chat.title : "неизвестный чат";
-
-  const publicText = [
-    `🚨 <b>Репорт!</b>`,
-    `От: <a href="tg://user?id=${user.id}">${escapeHtml(user.first_name || "Пользователь")}</a>`,
-    `ID: <code>${user.id}</code>`,
-    "",
-    adminTags,
-    "",
-    `Ответ на сообщение:\n<blockquote>${escapeHtml(replyText)}</blockquote>`,
-  ].join("\n");
-
-  // Сообщение в основном чате
-  await ctx.telegram.sendMessage(ctx.chat.id, publicText, {
-    parse_mode: "HTML",
-  });
-
-  const adminMessage = [
-    "🚨 <b>Новый репорт!</b>",
-    `👤 От: <a href="tg://user?id=${user.id}">${escapeHtml(user.first_name || "Пользователь")}</a>`,
-    `🆔 ID: <code>${user.id}</code>`,
-    `📍 Чат: ${escapeHtml(chatTitle)}`,
-    "",
-    `💬 Сообщение:\n<blockquote>${escapeHtml(replyText)}</blockquote>`,
-    "",
-    `🔗 [Открыть чат](https://t.me/c/${String(GROUP_ID).replace("-100", "")})`,
-  ].join("\n");
-
-  // Отправляем уведомление в админский чат
-  await ctx.telegram.sendMessage(ADMIN_GROUP_ID, adminMessage, {
-    parse_mode: "HTML",
-  });
 });
 
 // === Команда /reset в личке ===

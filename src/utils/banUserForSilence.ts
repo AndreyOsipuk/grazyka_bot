@@ -3,7 +3,7 @@ import type { User } from "telegraf/types";
 
 import { clearSilenceTimer } from "./clearSilenceTimer";
 import { ADMIN_GROUP_ID, escapeHtml, TIME_LIMIT_MINUTES } from "./index";
-import { pluralizeMinutes, pluralizeMinutesGenitive } from "./pluralizeMinutes";
+import { pluralizeMinutesGenitive } from "./pluralizeMinutes";
 
 export const banUserForSilence = async (
   ctx: Context,

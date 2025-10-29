@@ -5,6 +5,11 @@ export const ADMIN_IDS: number[] = (process.env.ADMIN_IDS || "")
 
 export const isAdmin = (userId: number) => ADMIN_IDS.includes(Number(userId));
 
+export const ADMIN_USERNAMES =
+  process.env.ADMIN_USERNAMES?.split(",")
+    .map((username) => username.trim())
+    .filter(Boolean) || [];
+
 export function escapeHtml(s: string | number): string {
   return String(s)
     .replace(/&/g, "&amp;")
