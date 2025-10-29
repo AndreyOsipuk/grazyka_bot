@@ -457,7 +457,7 @@ bot.hears(/^report$/i, async (ctx) => {
     } else {
       // Запасной вариант через ID
       adminMentions = ADMIN_IDS.map(
-        (id) => `<a href="tg://user?id=${id}">👮‍♂️</a>`,
+        (id) => `<a href="tg://user?id=${id}">️</a>`,
       ).join(" ");
     }
 
@@ -474,25 +474,13 @@ bot.hears(/^report$/i, async (ctx) => {
 
     await ctx.replyWithHTML(publicText, {
       reply_parameters: {
-        message_id: ctx.message.message_id,
+        message_id: reply.message_id,
       },
     });
 
-    let adminChatMentions = "";
-
-    if (ADMIN_USERNAMES.length > 0) {
-      adminChatMentions = ADMIN_USERNAMES.map(
-        (username) => `<a href="https://t.me/${username}">@${username}</a>`,
-      ).join(" ");
-    } else {
-      adminChatMentions = ADMIN_IDS.map(
-        (id) => `<a href="tg://user?id=${id}">👮‍♂️</a>`,
-      ).join(" ");
-    }
-
     // Сообщение в админском чате
     const adminMessage = [
-      `${adminChatMentions}`,
+      `${adminMentions}`,
       "🚨 <b>Новый репорт в чате!</b>",
       `👤 От: <a href="tg://user?id=${user.id}">${escapeHtml(user.first_name || "Пользователь")}</a>`,
       `🆔 ID: <code>${user.id}</code>`,
