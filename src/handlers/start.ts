@@ -1,30 +1,10 @@
-import fs from "fs";
-import path from "path";
 import type { Context } from "telegraf";
 import { Markup } from "telegraf";
-import { fileURLToPath } from "url";
 
 import { userInviteLinks, userRequests } from "../core";
-import { TIME_LIMIT_MINUTES } from "../utils";
-import { pluralizeMinutesGenitive } from "../utils/pluralizeMinutes";
+import { getRulesText } from "../utils/getRulesText";
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-const baseRulesText = fs
-  .readFileSync(path.resolve(__dirname, "../rules.txt"), "utf8")
-  .trim();
-
-const dynamicSection = `
-⚠️⚠️⚠️
-<b>Внимание!</b>
-Вы должны написать приветственную анкету (имя, пол, возраст, город, фото или мем 18+) в течение ${pluralizeMinutesGenitive(TIME_LIMIT_MINUTES)} после вступления, иначе будете забанены. 
-⚠️⚠️⚠️
-
-<b>Нажав кнопку ниже, вы подтверждаете, что ознакомились и согласны с правилами группы.</b>
-`;
-
-const rulesText = `${baseRulesText}\n\n${dynamicSection}`.trim();
+const rulesText = getRulesText();
 
 export const start = async (ctx: Context) => {
   const user = ctx.from;
