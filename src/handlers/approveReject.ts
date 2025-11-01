@@ -16,7 +16,7 @@ export const approveReject = async (ctx: ActionContext) => {
   const chat = ctx.chat;
 
   if (!user) return;
-  if (!chat || chat.type !== "private") return;
+  if (!chat) return;
 
   if (ctx.chat?.id !== ADMIN_GROUP_ID) {
     return;
