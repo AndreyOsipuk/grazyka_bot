@@ -1,24 +1,24 @@
-import fs from "fs";
-import path from "path";
+import "dotenv/config";
 
-import type { ActionContext } from "../types/types";
-import { isAdmin } from "../utils";
-import { redis } from "../utils/redis";
+import * as fs from "fs";
+import * as path from "path";
 
-export async function importMembers(ctx: ActionContext) {
-  const admin = ctx.from;
+import { redis } from "../utils/redis.js";
 
-  if (!isAdmin(admin.id)) {
-    return ctx.reply("🚫 Только админы могут импортировать участников");
-  }
-
-  const filePath = path.resolve("../../members.json");
+async function main() {
+  const filePath = path.resolve("./members.json");
   if (!fs.existsSync(filePath)) {
-    return ctx.reply("❌ Файл members.json не найден рядом с ботом");
+    console.error("❌ Файл members.json не найден рядом со скриптом");
+    process.exit(1);
   }
 
   const data = JSON.parse(fs.readFileSync(filePath, "utf8"));
   let count = 0;
+
+  console.log(`📦 Найдено ${data.length} участников, импортируем в Redis...`);
+
+  const now = Date.now();
+  const offset = 4 * 7 * 24 * 3600 * 1000; // 4 недели назад
 
   for (const member of data) {
     if (!member.id) continue;
@@ -26,11 +26,18 @@ export async function importMembers(ctx: ActionContext) {
       username: member.username || "",
       first_name: member.first_name || "",
       last_name: member.last_name || "",
-      last_message: Date.now() - 90 * 24 * 3600 * 1000, // фиктивно 90 дней назад
+      last_message: (now - offset).toString(),
     });
-    await redis.sadd("active_users", member.id.toString());
     count++;
   }
 
-  await ctx.reply(`✅ Импортировано ${count} участников в Redis`);
+  console.log(`✅ Импортировано ${count} участников (фиктивно 4 недели назад)`);
+
+  await redis.quit();
+  console.log("🔌 Соединение с Redis закрыто");
 }
+
+main().catch((err) => {
+  console.error("❌ Ошибка при импорте:", err);
+  process.exit(1);
+});
