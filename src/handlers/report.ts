@@ -1,4 +1,4 @@
-import type { MessageContext } from "../types";
+import type { MessageContext } from "../types/types";
 import {
   ADMIN_GROUP_ID,
   ADMIN_IDS,

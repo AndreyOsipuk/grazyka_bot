@@ -1,5 +1,5 @@
 import { userInviteLinks, userRequests } from "../core";
-import type { ActionContext } from "../types";
+import type { ActionContext } from "../types/types";
 import {
   ADMIN_GROUP_ID,
   GROUP_ID,

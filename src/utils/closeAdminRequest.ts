@@ -1,6 +1,6 @@
 import type { Context } from "telegraf";
 
-import type { UserRequest } from "../types";
+import type { UserRequest } from "../types/types";
 import { ADMIN_GROUP_ID } from "./index";
 
 export async function closeAdminRequest(

@@ -38,3 +38,8 @@ export type ActionContext = NarrowedContext<
 > & {
   match: RegExpExecArray;
 };
+
+export type CommandContext = NarrowedContext<
+  Context<Update>,
+  Update.MessageUpdate<Message.TextMessage>
+>;

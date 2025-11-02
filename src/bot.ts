@@ -12,6 +12,7 @@ import { report } from "./handlers/report";
 import { reset } from "./handlers/reset";
 import { rules } from "./handlers/rules";
 import { start } from "./handlers/start";
+import { stats } from "./handlers/stats";
 import { whois } from "./handlers/whois";
 import { BOT_TOKEN } from "./utils";
 import { launch } from "./utils/launch";
@@ -28,6 +29,7 @@ bot.command("rules", rules);
 bot.command("whois", whois);
 bot.command("chatid", chatId);
 bot.command("reset", reset);
+bot.command("stats", stats);
 
 bot.action("agree_rules", async (ctx) => agreeRules(ctx, bot));
 bot.action(/^(approve|reject)_(\d+)$/, approveReject);

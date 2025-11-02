@@ -1,4 +1,4 @@
-import type { UserRequest } from "./types";
+import type { UserRequest } from "./types/types";
 
 export const welcomeMsgs = new Map<
   number,

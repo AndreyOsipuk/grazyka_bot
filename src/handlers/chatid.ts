@@ -1,4 +1,4 @@
-import type { MessageContext } from "../types";
+import type { MessageContext } from "../types/types";
 import { isAdmin } from "../utils";
 
 export const chatId = (ctx: MessageContext) => {

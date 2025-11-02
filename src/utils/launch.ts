@@ -20,6 +20,10 @@ export const launch = async (bot: Telegraf) => {
         description: "Инфо о пользователе (reply или /whois <id>)",
       },
       { command: "chatid", description: "Показать ID чата" },
+      {
+        command: "stats",
+        description: "Показать статистику или дату последнего сообщения",
+      },
     ],
     { scope: { type: "chat", chat_id: ADMIN_GROUP_ID } },
   );
@@ -31,6 +35,10 @@ export const launch = async (bot: Telegraf) => {
         description: "Сообщить о нарушении (reply на сообщение)",
       },
       { command: "rules", description: "Показать правила группы" },
+      {
+        command: "stats",
+        description: "Показать статистику или дату последнего сообщения",
+      },
     ],
     { scope: { type: "chat", chat_id: GROUP_ID } },
   );

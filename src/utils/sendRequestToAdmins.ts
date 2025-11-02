@@ -1,6 +1,6 @@
 import { type Context, Markup } from "telegraf";
 
-import type { UserRequest } from "../types";
+import type { UserRequest } from "../types/types";
 import { ADMIN_GROUP_ID, TIME_LIMIT_MINUTES } from "./index";
 import { pluralizeMinutesGenitive } from "./pluralizeMinutes";
 

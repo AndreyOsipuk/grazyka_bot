@@ -9,7 +9,7 @@ import {
   userJoinTimes,
   welcomeMsgs,
 } from "../core";
-import type { NewMembersContext } from "../types";
+import type { NewMembersContext } from "../types/types";
 import {
   ADMIN_GROUP_ID,
   escapeHtml,
