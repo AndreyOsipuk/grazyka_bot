@@ -5,10 +5,6 @@ import { getAllActiveUserIds, getUser } from "../utils/redis";
 
 // eslint-disable-next-line sonarjs/cognitive-complexity
 export async function stats(ctx: CommandContext) {
-  if (!isAdmin(ctx.from.id)) {
-    return ctx.reply("🚫 Только админы");
-  }
-
   const [, arg] = ctx.message?.text.split(" ") || [];
   const now = Date.now();
 
@@ -35,7 +31,6 @@ export async function stats(ctx: CommandContext) {
     if (!user?.last_message) return ctx.reply("❌ Нет данных об активности");
 
     const diffMs = now - Number(user.last_message);
-    const diffDays = Math.floor(diffMs / 86400000);
     const detailed = formatDuration(diffMs);
 
     const displayName = user.username
@@ -43,11 +38,12 @@ export async function stats(ctx: CommandContext) {
       : `<a href="tg://user?id=${foundId}">${user.first_name || "Без имени"}</a>`;
 
     return ctx.replyWithHTML(
-      [
-        `📅 Последнее сообщение ${displayName}:`,
-        `⏰ ${diffDays} дней (${detailed}) назад`,
-      ].join("\n"),
+      [`📅 Последнее сообщение ${displayName}: ${detailed} назад`].join("\n"),
     );
+  }
+
+  if (!isAdmin(ctx.from.id)) {
+    return ctx.reply("🚫 Общую статистику могут запрашивать только админы");
   }
 
   // === Если передано число ===
