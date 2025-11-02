@@ -64,9 +64,17 @@ export async function stats(ctx: CommandContext) {
     }
   }
 
+  const total = ids.length;
+  const inactiveCount = inactive.length;
+
   const message =
     inactive.length > 0
-      ? `🕰 Неактивны более ${days} дней:\n\n${inactive.join("\n")}`
+      ? [
+          `🕰 Неактивны более ${days} дней:\n`,
+          inactive.join("\n"),
+          "",
+          `📊 Всего неактивных: <b>${inactiveCount}</b> из <b>${total}</b>`,
+        ].join("\n")
       : `✅ Все писали менее ${days} дней назад.`;
 
   await ctx.replyWithHTML(message);
