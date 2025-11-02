@@ -1,5 +1,6 @@
 import type { CommandContext } from "../types/types";
 import { isAdmin } from "../utils";
+import { formatDuration } from "../utils/formatDuration";
 import { getAllActiveUserIds, getUser } from "../utils/redis";
 
 // eslint-disable-next-line sonarjs/cognitive-complexity
@@ -33,14 +34,19 @@ export async function stats(ctx: CommandContext) {
     const user = await getUser(foundId);
     if (!user?.last_message) return ctx.reply("❌ Нет данных об активности");
 
-    const diffDays = Math.floor((now - Number(user.last_message)) / 86400000);
+    const diffMs = now - Number(user.last_message);
+    const diffDays = Math.floor(diffMs / 86400000);
+    const detailed = formatDuration(diffMs);
 
     const displayName = user.username
       ? `@${user.username}`
       : `<a href="tg://user?id=${foundId}">${user.first_name || "Без имени"}</a>`;
 
     return ctx.replyWithHTML(
-      `📅 Последнее сообщение ${displayName} — ${diffDays} дней назад`,
+      [
+        `📅 Последнее сообщение ${displayName}:`,
+        `⏰ ${diffDays} дней (${detailed}) назад`,
+      ].join("\n"),
     );
   }
 
