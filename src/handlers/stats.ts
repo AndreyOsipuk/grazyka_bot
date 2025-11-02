@@ -1,6 +1,6 @@
 import type { CommandContext } from "../types/types";
 import { isAdmin } from "../utils";
-import { getAllActiveUserIds, redis } from "../utils/redis";
+import { getAllActiveUserIds, getUser } from "../utils/redis";
 
 // eslint-disable-next-line sonarjs/cognitive-complexity
 export async function stats(ctx: CommandContext) {
@@ -17,42 +17,50 @@ export async function stats(ctx: CommandContext) {
     const allIds = await getAllActiveUserIds();
     let foundId: string | undefined;
 
-    if (/^\d+$/.test(target)) {
-      foundId = target;
-    } else {
-      for (const id of allIds) {
-        const username = await redis.hget(`user:${id}`, "username");
-        if (username?.toLowerCase() === target.toLowerCase()) {
-          foundId = id;
-          break;
-        }
+    for (const id of allIds) {
+      const user = await getUser(id);
+      const usernameMatch =
+        user.username?.toLowerCase() === target.toLowerCase();
+      const idMatch = id === target;
+      if (usernameMatch || idMatch) {
+        foundId = id;
+        break;
       }
     }
 
     if (!foundId) return ctx.reply("❌ Пользователь не найден");
 
-    const last = await redis.hget(`user:${foundId}`, "last_message");
-    if (!last) return ctx.reply("❌ Нет данных об активности");
+    const user = await getUser(foundId);
+    if (!user?.last_message) return ctx.reply("❌ Нет данных об активности");
 
-    const diffDays = Math.floor((now - Number(last)) / 86400000);
-    const username = await redis.hget(`user:${foundId}`, "username");
-    return ctx.reply(
-      `📅 Последнее сообщение @${username || foundId} — ${diffDays} дней назад`,
+    const diffDays = Math.floor((now - Number(user.last_message)) / 86400000);
+
+    const displayName = user.username
+      ? `@${user.username}`
+      : `<a href="tg://user?id=${foundId}">${user.first_name || "Без имени"}</a>`;
+
+    return ctx.replyWithHTML(
+      `📅 Последнее сообщение ${displayName} — ${diffDays} дней назад`,
     );
   }
 
   // === Если передано число ===
-  const days = arg ? parseInt(arg, 10) || 7 : 7;
+  const days = arg ? parseInt(arg, 10) || 14 : 14;
   const ids = await getAllActiveUserIds();
   const inactive: string[] = [];
 
   for (const id of ids) {
-    const last = await redis.hget(`user:${id}`, "last_message");
-    if (!last) continue;
-    const diffDays = Math.floor((now - Number(last)) / 86400000);
+    const user = await getUser(id);
+    if (!user?.last_message) continue;
+
+    const diffDays = Math.floor((now - Number(user.last_message)) / 86400000);
+
     if (diffDays >= days) {
-      const username = await redis.hget(`user:${id}`, "username");
-      inactive.push(`• @${username || id} — ${diffDays} дней`);
+      const displayName = user.username
+        ? `@${user.username}`
+        : `<a href="tg://user?id=${id}">${user.first_name || "Без имени"}</a>`;
+
+      inactive.push(`• ${displayName} — ${diffDays} дней`);
     }
   }
 
@@ -61,5 +69,5 @@ export async function stats(ctx: CommandContext) {
       ? `🕰 Неактивны более ${days} дней:\n\n${inactive.join("\n")}`
       : `✅ Все писали менее ${days} дней назад.`;
 
-  await ctx.reply(message);
+  await ctx.replyWithHTML(message);
 }
