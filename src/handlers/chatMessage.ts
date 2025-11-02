@@ -6,7 +6,7 @@ import {
   userJoinTimes,
   welcomeMsgs,
 } from "../core";
-import { escapeHtml, GROUP_ID, isAdmin, TIME_LIMIT_MINUTES } from "../utils";
+import { escapeHtml, GROUP_ID, TIME_LIMIT_MINUTES } from "../utils";
 import { clearSilenceTimer } from "../utils/clearSilenceTimer";
 import { messageHasPhoto } from "../utils/messageHasPhoto";
 import { pluralizeMinutes } from "../utils/pluralizeMinutes";
@@ -16,7 +16,7 @@ export const chatMessage = async (ctx: Context) => {
   if (!ctx.chat || ctx.chat.id !== GROUP_ID) return;
   const user = ctx.from;
 
-  if (!user || user.is_bot || isAdmin(user.id)) return;
+  if (!user || user.is_bot) return;
   if (!ctx.message) return;
 
   await saveUserActivity(user);
