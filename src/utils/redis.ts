@@ -1,10 +1,11 @@
 import Redis from "ioredis";
+import type { User } from "telegraf/types";
 
 export const redis = new Redis(
   process.env.REDIS_URL || "redis://127.0.0.1:6379",
 );
 
-export async function saveUserActivity(user: any) {
+export async function saveUserActivity(user: User) {
   if (!user?.id) return;
 
   const now = Date.now();
