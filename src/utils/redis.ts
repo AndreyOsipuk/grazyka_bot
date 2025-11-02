@@ -16,10 +16,13 @@ export async function saveUserActivity(user: User) {
     last_name: user.last_name || "",
     last_message: now,
   });
+}
 
-  await redis.sadd("active_users", user.id.toString());
+export async function getUser(userId: number | string) {
+  return redis.hgetall(`user:${userId}`);
 }
 
 export async function getAllActiveUserIds() {
-  return redis.smembers("active_users");
+  const keys = await redis.keys("user:*");
+  return keys.map((k) => k.replace("user:", ""));
 }
