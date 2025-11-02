@@ -19,10 +19,6 @@ export async function saveUserActivity(user: any) {
   await redis.sadd("active_users", user.id.toString());
 }
 
-export async function getUserActivity(userId: number) {
-  return redis.hgetall(`user:${userId}`);
-}
-
 export async function getAllActiveUserIds() {
   return redis.smembers("active_users");
 }

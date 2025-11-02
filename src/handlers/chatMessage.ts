@@ -10,6 +10,7 @@ import { escapeHtml, GROUP_ID, isAdmin, TIME_LIMIT_MINUTES } from "../utils";
 import { clearSilenceTimer } from "../utils/clearSilenceTimer";
 import { messageHasPhoto } from "../utils/messageHasPhoto";
 import { pluralizeMinutes } from "../utils/pluralizeMinutes";
+import { saveUserActivity } from "../utils/redis";
 
 export const chatMessage = async (ctx: Context) => {
   if (!ctx.chat || ctx.chat.id !== GROUP_ID) return;
@@ -17,6 +18,8 @@ export const chatMessage = async (ctx: Context) => {
 
   if (!user || user.is_bot || isAdmin(user.id)) return;
   if (!ctx.message) return;
+
+  await saveUserActivity(user);
 
   if (
     userFirstMessages.has(user.id) &&
