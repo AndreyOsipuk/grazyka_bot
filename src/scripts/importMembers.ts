@@ -3,6 +3,7 @@ import "dotenv/config";
 import * as fs from "fs";
 import * as path from "path";
 
+import { redisPrefix } from "../const";
 import { redis } from "../utils/redis.js";
 
 async function main() {
@@ -22,7 +23,7 @@ async function main() {
 
   for (const member of data) {
     if (!member.id) continue;
-    await redis.hset(`user:${member.id}`, {
+    await redis.hset(`${redisPrefix}user:${member.id}`, {
       username: member.username || "",
       first_name: member.first_name || "",
       last_name: member.last_name || "",

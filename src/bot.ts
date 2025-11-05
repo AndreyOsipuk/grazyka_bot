@@ -1,10 +1,7 @@
-import { config } from "dotenv";
-import path from "path";
+import "dotenv/config";
+
 import { Telegraf } from "telegraf";
 import pkg from "telegraf/filters";
-
-const envPath = process.env.DOTENV_CONFIG_PATH || ".env";
-config({ path: path.resolve(process.cwd(), envPath) });
 
 import { appType } from "./const";
 import { agreeRules } from "./handlers/agreeRules";

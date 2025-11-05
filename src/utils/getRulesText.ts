@@ -1,10 +1,5 @@
-import { config } from "dotenv";
-import path from "path";
-
-const envPath = process.env.DOTENV_CONFIG_PATH || ".env";
-config({ path: path.resolve(process.cwd(), envPath) });
-
 import fs from "fs";
+import path from "path";
 import { fileURLToPath } from "url";
 
 import { appType } from "../const";

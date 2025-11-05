@@ -1,11 +1,5 @@
-import { config } from "dotenv";
-
-const envPath = process.env.DOTENV_CONFIG_PATH || ".env";
-config({ path: path.resolve(process.cwd(), envPath) });
-
 import fs from "fs";
 import input from "input";
-import path from "path";
 import { TelegramClient } from "telegram";
 import { StringSession } from "telegram/sessions/index.js";
 
