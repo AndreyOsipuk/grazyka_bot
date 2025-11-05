@@ -1,8 +1,12 @@
-import "dotenv/config";
-
+import { config } from "dotenv";
+import path from "path";
 import { Telegraf } from "telegraf";
 import pkg from "telegraf/filters";
 
+const envPath = process.env.DOTENV_CONFIG_PATH || ".env";
+config({ path: path.resolve(process.cwd(), envPath) });
+
+import { appType } from "./const";
 import { agreeRules } from "./handlers/agreeRules";
 import { approveReject } from "./handlers/approveReject";
 import { chatId } from "./handlers/chatid";
@@ -14,6 +18,7 @@ import { rules } from "./handlers/rules";
 import { start } from "./handlers/start";
 import { stats } from "./handlers/stats";
 import { whois } from "./handlers/whois";
+import { AppTypes } from "./types/types";
 import { BOT_TOKEN } from "./utils";
 import { launch } from "./utils/launch";
 import { validate } from "./utils/validate";
@@ -32,9 +37,12 @@ bot.command("reset", reset);
 bot.command("stats", stats);
 
 bot.action("agree_rules", async (ctx) => agreeRules(ctx, bot));
-bot.action(/^(approve|reject)_(\d+)$/, approveReject);
 
-bot.on(pkg.message("new_chat_members"), newChatMembers as any);
+if (appType! == AppTypes.alco) {
+  bot.action(/^(approve|reject)_(\d+)$/, approveReject);
+  bot.on(pkg.message("new_chat_members"), newChatMembers as never);
+}
+
 bot.on("message", chatMessage);
 
 bot.hears(/^report$/i, report);

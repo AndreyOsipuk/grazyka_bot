@@ -6,9 +6,12 @@
   "type": "module",
   "scripts": {
     "dev": "run-p dev:serve dev:tsc",
+    "dev:alco": "run-p dev:serve:alco dev:tsc",
     "dev:serve": "tsx watch src/bot.ts",
+    "dev:serve:alco": "cross-env DOTENV_CONFIG_PATH=.env.alco tsx watch src/bot.ts",
     "dev:tsc": "tsc --noEmit --watch",
-    "start": "tsx src/bot.ts"
+    "start": "tsx src/bot.ts",
+    "start:alco": "cross-env DOTENV_CONFIG_PATH=.env.alco tsx src/bot.ts"
   },
   "repository": {
     "type": "git",
@@ -34,6 +37,7 @@
     "@types/node": "^24.9.2",
     "@typescript-eslint/eslint-plugin": "^8.46.0",
     "@typescript-eslint/parser": "^8.46.0",
+    "cross-env": "^10.1.0",
     "eslint": "^9.37.0",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-import": "^2.32.0",

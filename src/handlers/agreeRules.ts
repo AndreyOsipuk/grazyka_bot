@@ -1,6 +1,8 @@
 import type { Context, Telegraf } from "telegraf";
 
+import { appType } from "../const";
 import { userInviteLinks, userRequests } from "../core";
+import { AppTypes } from "../types/types";
 import { ADMIN_GROUP_ID, GROUP_ID } from "../utils";
 import { generateNewInviteLink } from "../utils/generateNewInviteLink";
 import { isUserBanned } from "../utils/isUserBanned";
@@ -56,10 +58,33 @@ export const agreeRules = async (ctx: Context, bot: Telegraf) => {
     userInviteLinks,
   );
 
+  if (appType == AppTypes.alco) {
+    if (!invite?.invite_link) {
+      return ctx.editMessageText(
+        `❌ Ошибка генерации ссылки для ${user.first_name}`,
+      );
+    }
+
+    await ctx.editMessageText("✅ Вы согласились с правилами!");
+
+    const successMsg = [
+      "🎉 Для вступления перейдите по ссылке:",
+      invite.invite_link,
+      "",
+      "⚠️ <b>ВАЖНО:</b>",
+      "",
+      "🆘 Если ссылка не работает, запросите новую через /start",
+    ].join("\n");
+
+    await ctx.telegram.sendMessage(chat.id, successMsg, {
+      parse_mode: "HTML",
+    });
+    return;
+  }
+
   await ctx.editMessageText(
     "✅ Вы согласились с правилами! Запрос отправлен администраторам. Ожидайте одобрения.",
   );
-
   // Отправляем запрос админам
   await sendRequestToAdmins(ctx, user.id, invite?.invite_link, userRequests);
 };

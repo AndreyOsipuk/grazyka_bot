@@ -1,3 +1,9 @@
+import { config } from "dotenv";
+import path from "path";
+
+const envPath = process.env.DOTENV_CONFIG_PATH || ".env";
+config({ path: path.resolve(process.cwd(), envPath) });
+
 export const ADMIN_IDS: number[] = (process.env.ADMIN_IDS || "")
   .split(/[\s,]+/)
   .map((v) => Number(v))

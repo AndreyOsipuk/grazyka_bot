@@ -43,3 +43,8 @@ export type CommandContext = NarrowedContext<
   Context<Update>,
   Update.MessageUpdate<Message.TextMessage>
 >;
+
+export enum AppTypes {
+  gryzuka = "gryzuka",
+  alco = "alco",
+}

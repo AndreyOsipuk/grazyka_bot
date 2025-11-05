@@ -2,6 +2,7 @@ import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
 
+import { appType } from "../const";
 import {
   silenceTimers,
   userFirstMessages,
@@ -10,6 +11,7 @@ import {
   welcomeMsgs,
 } from "../core";
 import type { NewMembersContext } from "../types/types";
+import { AppTypes } from "../types/types";
 import {
   ADMIN_GROUP_ID,
   escapeHtml,
@@ -84,17 +86,28 @@ export const newChatMembers = async (ctx: NewMembersContext) => {
     );
     silenceTimers.set(member.id, handle);
 
+    const additionalText =
+      appType === AppTypes.gryzuka
+        ? [
+            `⚠️ <b>Напоминание:</b> Напишите вашу анкету (имя, пол, возраст, город, фото или мем 18+) в течение ${pluralizeMinutesGenitive(TIME_LIMIT_MINUTES)}.`,
+            "",
+            "⏰ Время пошло!",
+          ]
+        : [
+            `⚠️ <b>Напоминание:</b> Напишите вашу анкету (имя, пол, возраст, город, фото или алко-мем)`,
+          ];
+
     const sent = await ctx.replyWithHTML(
       [
         `👋 Добро пожаловать, <a href="tg://user?id=${member.id}">${escapeHtml(member.first_name || "гость")}</a>!`,
         "",
-        `⚠️ <b>Напоминание:</b> Напишите вашу анкету (имя, пол, возраст, город, фото или мем 18+) в течение ${pluralizeMinutesGenitive(TIME_LIMIT_MINUTES)}.`,
-        "",
-        "⏰ Время пошло!",
+        ...additionalText,
       ].join("\n"),
     );
 
-    await ctx.replyWithAudio({ source: fs.createReadStream(audioPath) });
+    if (appType === AppTypes.gryzuka) {
+      await ctx.replyWithAudio({ source: fs.createReadStream(audioPath) });
+    }
 
     welcomeMsgs.set(member.id, {
       chatId: ctx.chat.id,
