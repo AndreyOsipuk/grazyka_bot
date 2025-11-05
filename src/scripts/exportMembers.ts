@@ -1,7 +1,11 @@
-import "dotenv/config";
+import { config } from "dotenv";
+
+const envPath = process.env.DOTENV_CONFIG_PATH || ".env";
+config({ path: path.resolve(process.cwd(), envPath) });
 
 import fs from "fs";
 import input from "input";
+import path from "path";
 import { TelegramClient } from "telegram";
 import { StringSession } from "telegram/sessions/index.js";
 
@@ -17,7 +21,7 @@ const { API_ID, API_HASH, PHONE_NUMBER } = process.env as Record<
 if (!API_ID || !API_HASH || !PHONE_NUMBER) {
   console.error("❌ Отсутствуют обязательные переменные в .env");
   console.error(
-    "Нужно указать API_ID, API_HASH, PHONE_NUMBER и GROUP_URL.\n" +
+    "Нужно указать API_ID, API_HASH, PHONE_NUMBER.\n" +
       "👉 Получить можно на https://my.telegram.org",
   );
   process.exit(1);
