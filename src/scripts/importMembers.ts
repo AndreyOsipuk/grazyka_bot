@@ -7,7 +7,7 @@ import { redisPrefix } from "../const";
 import { redis } from "../utils/redis.js";
 
 async function main() {
-  const filePath = path.resolve("./members.json");
+  const filePath = path.resolve(`./${redisPrefix}members.json`);
   if (!fs.existsSync(filePath)) {
     console.error("❌ Файл members.json не найден рядом со скриптом");
     process.exit(1);
