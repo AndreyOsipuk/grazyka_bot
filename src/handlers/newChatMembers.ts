@@ -86,11 +86,13 @@ export const newChatMembers = async (ctx: NewMembersContext) => {
     );
     silenceTimers.set(member.id, handle);
 
+    const mem = appType === AppTypes.gryzuka ? "мем 18+" : "алко-мем";
+
     const sent = await ctx.replyWithHTML(
       [
         `👋 Добро пожаловать, <a href="tg://user?id=${member.id}">${escapeHtml(member.first_name || "гость")}</a>!`,
         "",
-        `⚠️ <b>Напоминание:</b> Напишите вашу анкету (имя, пол, возраст, город, фото или мем 18+) в течение ${pluralizeMinutesGenitive(TIME_LIMIT_MINUTES)}.`,
+        `⚠️ <b>Напоминание:</b> Напишите вашу анкету (имя, пол, возраст, город, фото или ${mem}) в течение ${pluralizeMinutesGenitive(TIME_LIMIT_MINUTES)}.`,
         "",
         "⏰ Время пошло!",
       ].join("\n"),
