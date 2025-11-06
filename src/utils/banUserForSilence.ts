@@ -33,7 +33,7 @@ export const banUserForSilence = async (
       [
         `🚫 Пользователь <a href="tg://user?id=${user.id}">${escapeHtml(user.first_name || user.id)}</a> был кикнут за нарушение правил.`,
         "",
-        `❌ <b>Причина:</b> Не написал первое сообщение или не прислал в течение ${pluralizeMinutesGenitive(TIME_LIMIT_MINUTES)} после вступления.`,
+        `❌ <b>Причина:</b> Не написал первое сообщение в течение ${pluralizeMinutesGenitive(TIME_LIMIT_MINUTES)} после вступления.`,
         `⏰ <b>Время вступления:</b> ${joinTime.toLocaleTimeString("ru-RU")}`,
       ].join("\n"),
       { parse_mode: "HTML" },
