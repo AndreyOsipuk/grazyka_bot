@@ -39,6 +39,7 @@ export const launch = async (bot: Telegraf) => {
         description: "Сообщить о нарушении (reply на сообщение)",
       },
       { command: "rules", description: "Показать правила группы" },
+      { command: "report", description: "Пожаловаться на сообщение (в чате)" },
       {
         command: "stats",
         description: "Показать статистику или дату последнего сообщения",

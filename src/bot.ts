@@ -32,17 +32,16 @@ bot.command("whois", whois);
 bot.command("chatid", chatId);
 bot.command("reset", reset);
 bot.command("stats", stats);
+bot.command("report", report);
 
 bot.action("agree_rules", async (ctx) => agreeRules(ctx, bot));
 
-if (appType! == AppTypes.alco) {
+if (appType == AppTypes.gryzuka) {
   bot.action(/^(approve|reject)_(\d+)$/, approveReject);
-  bot.on(pkg.message("new_chat_members"), newChatMembers as never);
 }
 
+bot.on(pkg.message("new_chat_members"), newChatMembers as never);
 bot.on("message", chatMessage);
-
-bot.hears(/^report$/i, report);
 
 await launch(bot);
 
