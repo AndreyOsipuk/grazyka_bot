@@ -54,7 +54,8 @@ export async function stats(ctx: CommandContext) {
   const days = arg && /^\d+$/.test(arg) ? parseInt(arg, 10) || 14 : 14;
 
   const ids = await getAllActiveUserIds();
-  const inactive: string[] = [];
+  const inactiveUsers: { id: string; displayName: string; diffDays: number }[] =
+    [];
 
   for (const id of ids) {
     const user = await getUser(id);
@@ -67,18 +68,24 @@ export async function stats(ctx: CommandContext) {
         ? `@${user.username}`
         : `<a href="tg://user?id=${id}">${user.first_name || "Без имени"}</a>`;
 
-      inactive.push(`• ${displayName} — ${diffDays} дней`);
+      inactiveUsers.push({ id, displayName, diffDays });
     }
   }
 
+  inactiveUsers.sort((a, b) => b.diffDays - a.diffDays);
+
   const total = ids.length;
-  const inactiveCount = inactive.length;
+  const inactiveCount = inactiveUsers.length;
+
+  const inactiveList = inactiveUsers.map(
+    (u) => `• ${u.displayName} — ${u.diffDays} дней`,
+  );
 
   const message =
-    inactive.length > 0
+    inactiveCount > 0
       ? [
-          `🕰 Неактивны более ${days} дней:\n`,
-          inactive.join("\n"),
+          `🕰 Неактивны более ${days} дней (от самых старых):\n`,
+          inactiveList.join("\n"),
           "",
           `📊 Всего неактивных: <b>${inactiveCount}</b> из <b>${total}</b>`,
         ].join("\n")
