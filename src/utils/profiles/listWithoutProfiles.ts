@@ -1,12 +1,13 @@
 import type { CommandContext } from "../../types/types";
-import { escapeHtml, GROUP_ID, isAdmin } from "../index";
-import { getAllActiveUserIds } from "../redis"; // у тебя уже есть
+import { ADMIN_GROUP_ID, escapeHtml, GROUP_ID, isAdmin } from "../index";
+import { getAllActiveUserIds, getUser } from "../redis";
 import { getProfile } from "./profiles";
 
 export const listWithoutProfiles = async (ctx: CommandContext) => {
   const chat = ctx.chat;
   const from = ctx.from;
-  if (!chat || chat.id !== GROUP_ID) return;
+
+  if (!chat || (chat.id !== GROUP_ID && chat.id !== ADMIN_GROUP_ID)) return;
   if (!from) return;
 
   if (!isAdmin(from.id)) {
@@ -20,11 +21,17 @@ export const listWithoutProfiles = async (ctx: CommandContext) => {
 
   for (const id of ids) {
     const profile = await getProfile(id);
-    if (!profile) {
-      without.push(
-        `<a href="tg://user?id=${id}">${escapeHtml(id.toString())}</a>`, // можно улучшить: хранить first_name в Redis
-      );
-    }
+    if (profile) continue; // у кого анкета есть — пропускаем
+
+    const user = await getUser(id);
+
+    const displayName = user?.username
+      ? `@${user.username}`
+      : `<a href="tg://user?id=${id}">${escapeHtml(
+          user?.first_name || "Без имени",
+        )}</a>`;
+
+    without.push(`• ${displayName}`);
   }
 
   if (without.length === 0) {
@@ -35,7 +42,7 @@ export const listWithoutProfiles = async (ctx: CommandContext) => {
   const text = [
     "❗ Пользователи без анкет:",
     "",
-    without.join(", "),
+    without.join("\n"),
     "",
     "Рекомендуется мягко пнуть их и попросить заполнить /anketa 🙂",
   ].join("\n");

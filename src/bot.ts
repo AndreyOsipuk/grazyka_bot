@@ -65,7 +65,7 @@ if (appType == AppTypes.gryzuka) {
   bot.action(/^(approve|reject)_(\d+)$/, approveReject);
 }
 
-bot.on("text", handleProfileWizardMessage);
+bot.on(pkg.message("text"), handleProfileWizardMessage);
 bot.on(pkg.message("new_chat_members"), newChatMembers as never);
 bot.on("message", logCombotModeration);
 bot.on("message", chatMessage);
