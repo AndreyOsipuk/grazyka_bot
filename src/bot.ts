@@ -19,7 +19,7 @@ import { AppTypes } from "./types/types";
 import { BOT_TOKEN } from "./utils";
 import { chatMemberUpdate } from "./utils/chatMemberUpdate";
 import { launch } from "./utils/launch";
-import { logCombotActions } from "./utils/logCombotActions";
+import { logCombotModeration } from "./utils/logCombotActions";
 import { reportClaim } from "./utils/reportClaim";
 import { validate } from "./utils/validate";
 
@@ -45,7 +45,7 @@ if (appType == AppTypes.gryzuka) {
 }
 
 bot.on(pkg.message("new_chat_members"), newChatMembers as never);
-bot.on("message", logCombotActions);
+bot.on("message", logCombotModeration);
 bot.on("message", chatMessage);
 bot.on("chat_member", chatMemberUpdate);
 
