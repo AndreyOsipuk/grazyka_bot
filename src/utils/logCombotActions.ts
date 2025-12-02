@@ -1,6 +1,6 @@
 import type { Context } from "telegraf";
 
-import { ADMIN_GROUP_ID, GROUP_ID } from "../utils";
+import { ADMIN_GROUP_ID, GROUP_ID } from "./index";
 
 const COMBOT_USERNAME = "combot";
 
