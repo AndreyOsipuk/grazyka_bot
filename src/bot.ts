@@ -20,6 +20,19 @@ import { BOT_TOKEN } from "./utils";
 import { chatMemberUpdate } from "./utils/chatMemberUpdate";
 import { launch } from "./utils/launch";
 import { logCombotModeration } from "./utils/logCombotActions";
+import { deleteProfileByAdmin } from "./utils/profiles/deleteProfileByAdmin";
+import { findProfiles } from "./utils/profiles/findProfiles";
+import { listWithoutProfiles } from "./utils/profiles/listWithoutProfiles";
+import {
+  handleProfileWizardMessage,
+  showMyProfile,
+  showUserProfile,
+  startProfileWizard,
+} from "./utils/profiles/profile";
+import {
+  profilesInlineFilter,
+  profilesInlineStart,
+} from "./utils/profiles/profilesInline";
 import { reportClaim } from "./utils/reportClaim";
 import { validate } from "./utils/validate";
 
@@ -36,7 +49,15 @@ bot.command("chatid", chatId);
 bot.command("reset", reset);
 bot.command("stats", stats);
 bot.command("report", report);
+bot.command("anketa", startProfileWizard);
+bot.command("myprofile", showMyProfile);
+bot.command("noprof", listWithoutProfiles);
+bot.command("find_profiles", findProfiles);
+bot.command("delprofile", deleteProfileByAdmin);
+bot.command("profile", showUserProfile);
+bot.command("profiles", profilesInlineStart);
 
+bot.action(/^profiles:/, profilesInlineFilter);
 bot.action("report_claim", reportClaim);
 bot.action("agree_rules", async (ctx) => agreeRules(ctx, bot));
 
@@ -44,6 +65,7 @@ if (appType == AppTypes.gryzuka) {
   bot.action(/^(approve|reject)_(\d+)$/, approveReject);
 }
 
+bot.on("text", handleProfileWizardMessage);
 bot.on(pkg.message("new_chat_members"), newChatMembers as never);
 bot.on("message", logCombotModeration);
 bot.on("message", chatMessage);

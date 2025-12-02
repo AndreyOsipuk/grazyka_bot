@@ -48,3 +48,13 @@ export enum AppTypes {
   gryzuka = "gryzuka",
   alco = "alco",
 }
+
+export type ProfileDraftStep = "gender" | "age" | "city" | "about";
+
+export type ProfileDraft = {
+  step: ProfileDraftStep;
+  gender?: "m" | "f" | "x";
+  age?: number;
+  city?: string;
+  about?: string;
+};

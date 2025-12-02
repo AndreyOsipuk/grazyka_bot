@@ -1,4 +1,4 @@
-import type { UserRequest } from "./types/types";
+import type { ProfileDraft, UserRequest } from "./types/types";
 
 export const welcomeMsgs = new Map<
   number,
@@ -12,3 +12,5 @@ export const userInviteLinks = new Map<
   { link: string; created_at: Date; used: boolean; used_at?: Date }
 >();
 export const silenceTimers = new Map<number, ReturnType<typeof setTimeout>>();
+
+export const profileDrafts = new Map<number, ProfileDraft>();

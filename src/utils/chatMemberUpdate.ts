@@ -9,6 +9,7 @@ import {
   welcomeMsgs,
 } from "../core";
 import { clearSilenceTimer } from "./clearSilenceTimer";
+import { deleteProfile } from "./profiles/profiles";
 import { redis } from "./redis";
 
 export async function chatMemberUpdate(ctx: Context) {
@@ -23,6 +24,8 @@ export async function chatMemberUpdate(ctx: Context) {
   if (status !== "left" && status !== "kicked") return;
 
   const userId = Number(user.id);
+
+  await deleteProfile(userId);
 
   // 1. Удаляем приветственное сообщение, если есть
   const wm = welcomeMsgs.get(userId);
