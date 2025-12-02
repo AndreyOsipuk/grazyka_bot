@@ -13,8 +13,13 @@ export async function generateNewInviteLink(
 ) {
   try {
     const name = `invite_${userId}_${new Date().toLocaleTimeString("ru-RU", { hour12: false })}`;
+
+    const nowSec = Math.floor(Date.now() / 1000);
+    const expireDate = nowSec + 60 * 60;
+
     const invite = await ctx.telegram.createChatInviteLink(GROUP_ID, {
       member_limit: 1,
+      expire_date: expireDate,
       creates_join_request: false,
       name,
     });
