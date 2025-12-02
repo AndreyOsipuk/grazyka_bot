@@ -6,27 +6,12 @@ const COMBOT_USERNAME = "combot";
 
 // Фразы, по которым мы считаем сообщение модерацией
 const MODERATION_WHITELIST: RegExp[] = [
-  /ban/i,
-  /banned/i,
-  /unban/i,
-  /kick/i,
-  /kicked/i,
-  /mute/i,
-  /muted/i,
-  /unmute/i,
-  /warn/i,
-  /ограничен/i,
-  /ограничена/i,
-  /заглушен/i,
-  /заглушена/i,
-  /мут/i,
-  /замьючен/i,
-  /замьючена/i,
-  /кикнут/i,
-  /кикнута/i,
-  /забанен/i,
-  /заблокирован/i,
-  /заблокирована/i,
+  /\bhas banned\b/i,
+  /\bhas kicked\b/i,
+  /\bhas muted\b/i,
+  /\bhas unmuted\b/i,
+  /\bhas restricted\b/i,
+  /\bhas warned\b/i,
 ];
 
 // Фразы, которые явно относятся к репутации и подобному (не хотим)
