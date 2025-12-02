@@ -1,7 +1,9 @@
 import type { Context } from "telegraf";
 
 import type { CommandContext } from "../../types/types";
+import { formatUserTag } from "../formatUserTag";
 import { escapeHtml, GROUP_ID } from "../index";
+import { getUser } from "../redis";
 import { getAllProfileUserIds, getProfile } from "./profiles";
 
 export const profilesInlineStart = async (ctx: CommandContext) => {
@@ -48,7 +50,7 @@ export const profilesInlineFilter = async (ctx: Context) => {
   const maxAge = parseInt(m[3], 10);
 
   const ids = await getAllProfileUserIds();
-  const results: { id: string; age: number; city: string }[] = [];
+  const results: { tag: string; age: number; city: string }[] = [];
 
   for (const id of ids) {
     const profile = await getProfile(id);
@@ -56,8 +58,11 @@ export const profilesInlineFilter = async (ctx: Context) => {
     if (gender !== "x" && profile.gender !== gender) continue;
     if (profile.age < minAge || profile.age > maxAge) continue;
 
+    const user = await getUser(id);
+    const tag = formatUserTag(id, user);
+
     results.push({
-      id,
+      tag,
       age: profile.age,
       city: profile.city,
     });
@@ -73,10 +78,7 @@ export const profilesInlineFilter = async (ctx: Context) => {
 
   const limited = isGroup ? results.slice(0, 10) : results;
   const lines = limited.map(
-    (p) =>
-      `• <a href="tg://user?id=${p.id}">${escapeHtml(
-        p.id,
-      )}</a> — ${p.age} лет, ${escapeHtml(p.city)}`,
+    (p) => `• ${p.tag} — ${p.age} лет, ${escapeHtml(p.city)}`,
   );
 
   const extra =
