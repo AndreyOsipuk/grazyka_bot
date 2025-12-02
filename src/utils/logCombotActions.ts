@@ -1,25 +1,9 @@
 import type { Context } from "telegraf";
 
-import { ADMIN_GROUP_ID, GROUP_ID } from "./index";
+import { ADMIN_GROUP_ID, escapeHtml, GROUP_ID, isAdmin } from "./index";
 
-const COMBOT_USERNAME = "combot";
-
-// Фразы, по которым мы считаем сообщение модерацией
-const MODERATION_WHITELIST: RegExp[] = [
-  /\bhas banned\b/i,
-  /\bhas kicked\b/i,
-  /\bhas muted\b/i,
-  /\bhas unmuted\b/i,
-  /\bhas restricted\b/i,
-  /\bhas warned\b/i,
-];
-
-// Фразы, которые явно относятся к репутации и подобному (не хотим)
-const REPUTATION_BLACKLIST: RegExp[] = [
-  /has increased reputation of/i,
-  /has decreased reputation of/i,
-  /reputation/i,
-];
+// Разрешённые админские команды
+const MODERATION_COMMAND_RE = /^!(warn|mute|unmute|ban|unban|kick|restrict)\b/i;
 
 export const logCombotModeration = async (ctx: Context) => {
   const chat = ctx.chat;
@@ -28,8 +12,8 @@ export const logCombotModeration = async (ctx: Context) => {
   if (!chat || chat.id !== GROUP_ID) return;
   if (!from) return;
 
-  // интересуют только сообщения от combot
-  if (from.username !== COMBOT_USERNAME) return;
+  // Нужны только админы
+  if (!isAdmin(from.id)) return;
 
   const msg: any = ctx.message;
   if (!msg) return;
@@ -41,15 +25,53 @@ export const logCombotModeration = async (ctx: Context) => {
 
   if (!text) return;
 
-  // Если это репутация — сразу выходим
-  const isReputation = REPUTATION_BLACKLIST.some((re) => re.test(text));
-  if (isReputation) return;
+  const trimmed = text.trim();
 
-  // Если в тексте есть признаки модерации — считаем это админским действием
-  const isModeration = MODERATION_WHITELIST.some((re) => re.test(text));
-  if (!isModeration) return;
+  // Проверяем, что это модераторская команда
+  const cmdMatch = trimmed.match(MODERATION_COMMAND_RE);
+  if (!cmdMatch) return;
 
-  // Здесь считаем, что это как раз kick/mute/ban/ограничение и т.п.
-  // Самый простой и надёжный способ — просто скопировать сообщение в админский чат
-  await ctx.telegram.copyMessage(ADMIN_GROUP_ID, chat.id, msg.message_id);
+  const command = cmdMatch[0]; // например "!warn"
+
+  // 🎯 Определяем, на кого была команда:
+  let targetMention = "— неизвестно —";
+  let targetId: number | undefined;
+
+  // 1) Если команда в ответ на сообщение → это лучший вариант
+  if (msg.reply_to_message?.from) {
+    const t = msg.reply_to_message.from;
+    targetId = t.id;
+    targetMention = t.username
+      ? `@${t.username}`
+      : `<a href="tg://user?id=${t.id}">${escapeHtml(t.first_name || "user")}</a>`;
+  }
+
+  // 2) Если команда через @username (!warn @androsible)
+  if (!targetId) {
+    const m = trimmed.match(/@([a-zA-Z0-9_]+)/);
+    if (m) {
+      targetMention = `@${m[1]}`;
+    }
+  }
+
+  // 📝 Формируем красивый лог в админский чат
+  const adminMention = from.username
+    ? `@${from.username}`
+    : `<a href="tg://user?id=${from.id}">${escapeHtml(from.first_name)}</a>`;
+
+  const formatted = [
+    `🛡 <b>Админское действие</b>`,
+    `👮 Админ: ${adminMention}`,
+    `💬 Команда: <code>${escapeHtml(command)}</code>`,
+    `🎯 Цель: ${targetMention}`,
+    "",
+    `🔗 <a href="https://t.me/c/${String(GROUP_ID).replace(
+      "-100",
+      "",
+    )}/${msg.message_id}">Перейти к сообщению</a>`,
+  ].join("\n");
+
+  await ctx.telegram.sendMessage(ADMIN_GROUP_ID, formatted, {
+    parse_mode: "HTML",
+  });
 };
