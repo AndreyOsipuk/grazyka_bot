@@ -2,7 +2,6 @@ import type { CommandContext } from "../../types/types";
 import { ADMIN_GROUP_ID, escapeHtml, GROUP_ID, isAdmin } from "../index";
 import { getAllActiveUserIds, getUser } from "../redis";
 import { getProfile } from "./profiles";
-
 export const listWithoutProfiles = async (ctx: CommandContext) => {
   const chat = ctx.chat;
   const from = ctx.from;
@@ -17,7 +16,7 @@ export const listWithoutProfiles = async (ctx: CommandContext) => {
   }
 
   const ids = await getAllActiveUserIds();
-  const without: string[] = [];
+  const withoutUsers: { id: string; displayName: string }[] = [];
 
   for (const id of ids) {
     const profile = await getProfile(id);
@@ -31,21 +30,30 @@ export const listWithoutProfiles = async (ctx: CommandContext) => {
           user?.first_name || "Без имени",
         )}</a>`;
 
-    without.push(`• ${displayName}`);
+    withoutUsers.push({ id, displayName });
   }
 
-  if (without.length === 0) {
-    await ctx.replyWithHTML("✅ У всех активных пользователей есть анкеты.");
-    return;
+  const total = ids.length;
+  const withoutCount = withoutUsers.length;
+
+  if (withoutCount === 0) {
+    return ctx.replyWithHTML(
+      `🎉 <b>У всех активных пользователей есть анкеты!</b>\n\n📊 Всего пользователей: <b>${total}</b>`,
+    );
   }
 
-  const text = [
-    "❗ Пользователи без анкет:",
+  // Формируем список
+  const listText = withoutUsers.map((u) => `• ${u.displayName}`).join("\n");
+
+  const message = [
+    `❗ <b>Пользователи без анкет:</b>`,
     "",
-    without.join("\n"),
+    listText,
     "",
-    "Рекомендуется мягко пнуть их и попросить заполнить /anketa 🙂",
+    `📊 Без анкет: <b>${withoutCount}</b> из <b>${total}</b>`,
+    "",
+    `Рекомендуется мягко пнуть их и попросить заполнить /anketa 🙂`,
   ].join("\n");
 
-  await ctx.replyWithHTML(text);
+  await ctx.replyWithHTML(message);
 };
