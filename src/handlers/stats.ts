@@ -84,7 +84,7 @@ export async function stats(ctx: CommandContext) {
   const message =
     inactiveCount > 0
       ? [
-          `🕰 Неактивны более ${days} дней (от самых старых):\n`,
+          `🕰 Неактивны более ${days} дней:\n`,
           inactiveList.join("\n"),
           "",
           `📊 Всего неактивных: <b>${inactiveCount}</b> из <b>${total}</b>`,
