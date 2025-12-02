@@ -1,10 +1,11 @@
+import "dotenv/config";
+
 import fs from "fs";
 import input from "input";
 import { TelegramClient } from "telegram";
 import { StringSession } from "telegram/sessions/index.js";
 
 import { redisPrefix } from "../const";
-
 // === Типы окружения ===
 const { API_ID, API_HASH, PHONE_NUMBER } = process.env as Record<
   string,
