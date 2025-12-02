@@ -17,6 +17,7 @@ import { stats } from "./handlers/stats";
 import { whois } from "./handlers/whois";
 import { AppTypes } from "./types/types";
 import { BOT_TOKEN } from "./utils";
+import { chatMemberUpdate } from "./utils/chatMemberUpdate";
 import { launch } from "./utils/launch";
 import { validate } from "./utils/validate";
 
@@ -42,6 +43,7 @@ if (appType == AppTypes.gryzuka) {
 
 bot.on(pkg.message("new_chat_members"), newChatMembers as never);
 bot.on("message", chatMessage);
+bot.on("chat_member", chatMemberUpdate);
 
 await launch(bot);
 
