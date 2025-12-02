@@ -19,6 +19,7 @@ import { AppTypes } from "./types/types";
 import { BOT_TOKEN } from "./utils";
 import { chatMemberUpdate } from "./utils/chatMemberUpdate";
 import { launch } from "./utils/launch";
+import { reportClaim } from "./utils/reportClaim";
 import { validate } from "./utils/validate";
 
 validate();
@@ -35,6 +36,7 @@ bot.command("reset", reset);
 bot.command("stats", stats);
 bot.command("report", report);
 
+bot.action("report_claim", reportClaim);
 bot.action("agree_rules", async (ctx) => agreeRules(ctx, bot));
 
 if (appType == AppTypes.gryzuka) {

@@ -96,6 +96,16 @@ export const report = async (ctx: MessageContext) => {
 
     await ctx.telegram.sendMessage(ADMIN_GROUP_ID, adminMessage, {
       parse_mode: "HTML",
+      reply_markup: {
+        inline_keyboard: [
+          [
+            {
+              text: "✅ Я уже занимаюсь",
+              callback_data: "report_claim",
+            },
+          ],
+        ],
+      },
     });
 
     console.log(`✅ Репорт отправлен от пользователя ${user.id}`);
