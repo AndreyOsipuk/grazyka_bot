@@ -5,11 +5,16 @@ import { getAllActiveUserIds, getUser } from "../utils/redis";
 
 // eslint-disable-next-line sonarjs/cognitive-complexity
 export async function stats(ctx: CommandContext) {
-  const [, arg] = ctx.message?.text.split(" ") || [];
+  const text = ctx.message?.text ?? "";
+
+  const [, ...args] = text.split(/\s+/);
+  const arg = args[0];
   const now = Date.now();
 
-  // === Если передан username или ID ===
-  if (arg && (arg.startsWith("@") || /^\d+$/.test(arg))) {
+  const isUserQuery =
+    arg && (arg.startsWith("@") || (/^\d+$/.test(arg) && arg.length >= 8)); // длинные цифры считаем ID
+
+  if (arg && isUserQuery) {
     const target = arg.replace("@", "");
     const allIds = await getAllActiveUserIds();
     let foundId: string | undefined;
@@ -46,8 +51,8 @@ export async function stats(ctx: CommandContext) {
     return ctx.reply("🚫 Общую статистику могут запрашивать только админы");
   }
 
-  // === Если передано число ===
-  const days = arg ? parseInt(arg, 10) || 14 : 14;
+  const days = arg && /^\d+$/.test(arg) ? parseInt(arg, 10) || 14 : 14;
+
   const ids = await getAllActiveUserIds();
   const inactive: string[] = [];
 
