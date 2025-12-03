@@ -17,7 +17,7 @@ import { stats } from "./handlers/stats";
 import { whois } from "./handlers/whois";
 import { AppTypes } from "./types/types";
 import { BOT_TOKEN } from "./utils";
-import { chatMemberUpdate } from "./utils/chatMemberUpdate";
+import { startCleanupInactiveUsersCron } from "./utils/cleanupInactiveUsersCron";
 import { launch } from "./utils/launch";
 import { logCombotModeration } from "./utils/logCombotActions";
 import { deleteProfileByAdmin } from "./utils/profiles/deleteProfileByAdmin";
@@ -42,6 +42,11 @@ console.log("🔑 BOT_TOKEN найден, создаём экземпляр бо
 const bot = new Telegraf(BOT_TOKEN as string);
 
 bot.start(start);
+
+bot.use((ctx, next) => {
+  console.log("🔥 RAW UPDATE:", JSON.stringify(ctx.update, null, 2));
+  return next();
+});
 
 bot.command("rules", rules);
 bot.command("whois", whois);
@@ -71,9 +76,10 @@ bot.on("message", async (ctx) => {
   await logCombotModeration(ctx);
   await chatMessage(ctx);
 });
-bot.on("chat_member", chatMemberUpdate);
 
 await launch(bot);
+
+startCleanupInactiveUsersCron(bot, 60);
 
 // Корректное завершение
 process.once("SIGINT", () => bot.stop("SIGINT"));

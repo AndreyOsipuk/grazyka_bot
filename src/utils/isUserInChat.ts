@@ -13,7 +13,8 @@ export async function isUserInChat(
     return (
       member.status === "creator" ||
       member.status === "administrator" ||
-      member.status === "member"
+      member.status === "member" ||
+      member.status === "restricted"
     );
   } catch (err: any) {
     // Если бот не видит пользователя (он не в чате)
