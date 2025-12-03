@@ -67,8 +67,10 @@ if (appType == AppTypes.gryzuka) {
 
 bot.on(pkg.message("text"), handleProfileWizardMessage);
 bot.on(pkg.message("new_chat_members"), newChatMembers as never);
-bot.on("message", logCombotModeration);
-bot.on("message", chatMessage);
+bot.on("message", async (ctx) => {
+  await logCombotModeration(ctx);
+  await chatMessage(ctx);
+});
 bot.on("chat_member", chatMemberUpdate);
 
 await launch(bot);
