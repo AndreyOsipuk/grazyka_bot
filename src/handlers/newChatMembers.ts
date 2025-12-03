@@ -28,6 +28,7 @@ const __dirname = path.dirname(__filename);
 
 const audioPath = path.resolve(__dirname, "../assets/welcome.ogg");
 
+// eslint-disable-next-line sonarjs/cognitive-complexity
 export const newChatMembers = async (ctx: NewMembersContext) => {
   const user = ctx.from;
 
@@ -48,7 +49,14 @@ export const newChatMembers = async (ctx: NewMembersContext) => {
 
     // пометим ссылку как использованную
     const linkInfo = userInviteLinks.get(member.id);
-    if (linkInfo) {
+    if (linkInfo && !linkInfo.used) {
+      try {
+        // 1️⃣ Отзываем ссылку в Telegram
+        await ctx.telegram.revokeChatInviteLink(GROUP_ID, linkInfo.link);
+      } catch (e) {
+        console.error("Не удалось отозвать инвайт:", e);
+      }
+
       linkInfo.used = true;
       linkInfo.used_at = new Date();
       userInviteLinks.set(member.id, linkInfo);
