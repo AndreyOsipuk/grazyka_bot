@@ -23,10 +23,7 @@ export const chatMessage = async (ctx: Context) => {
 
   await saveUserActivity(user);
 
-  if (
-    userFirstMessages.has(user.id) &&
-    userFirstMessages.get(user.id) === false
-  ) {
+  if (!userFirstMessages.get(user.id)) {
     const mem = appType === AppTypes.gryzuka ? "мем 18+" : "алко-мем";
     if (!messageHasPhoto(ctx.message)) {
       await ctx.replyWithHTML(
