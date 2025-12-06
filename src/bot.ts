@@ -43,11 +43,6 @@ const bot = new Telegraf(BOT_TOKEN as string);
 
 bot.start(start);
 
-bot.use((ctx, next) => {
-  console.log("🔥 RAW UPDATE:", JSON.stringify(ctx.update, null, 2));
-  return next();
-});
-
 bot.command("rules", rules);
 bot.command("whois", whois);
 bot.command("chatid", chatId);
@@ -70,12 +65,12 @@ if (appType == AppTypes.gryzuka) {
   bot.action(/^(approve|reject)_(\d+)$/, approveReject);
 }
 
-bot.on(pkg.message("text"), handleProfileWizardMessage);
 bot.on(pkg.message("new_chat_members"), newChatMembers as never);
 bot.on("message", async (ctx) => {
-  await logCombotModeration(ctx);
   await chatMessage(ctx);
+  await logCombotModeration(ctx);
 });
+bot.on(pkg.message("text"), handleProfileWizardMessage);
 
 await launch(bot);
 

@@ -26,8 +26,8 @@ export const chatMessage = async (ctx: Context) => {
   const fm = userFirstMessages.get(user.id);
 
   if (fm === false || fm === null) {
-    const mem = appType === AppTypes.gryzuka ? "мем 18+" : "алко-мем";
     if (!messageHasPhoto(ctx.message)) {
+      const mem = appType === AppTypes.gryzuka ? "мем 18+" : "алко-мем";
       await ctx.replyWithHTML(
         [
           `⚠️ <a href="tg://user?id=${user.id}">${escapeHtml(user.first_name || "гость")}</a>,`,

@@ -18,16 +18,19 @@ export const startProfileWizard = async (ctx: Context) => {
   );
 };
 
-// eslint-disable-next-line sonarjs/cognitive-complexity
-export const handleProfileWizardMessage = async (ctx: Context) => {
+export const handleProfileWizardMessage = async (
+  ctx: Context,
+  next: () => Promise<void>,
+  // eslint-disable-next-line sonarjs/cognitive-complexity
+) => {
   const user = ctx.from;
   const chat = ctx.chat;
-  if (!user || !chat || chat.type !== "private") return;
+  if (!user || !chat || chat.type !== "private") return next();
   const text = (ctx.message as any)?.text?.trim();
-  if (!text) return;
+  if (!text) return next();
 
   const draft = profileDrafts.get(user.id);
-  if (!draft) return; // мастер не запущен
+  if (!draft) return next(); // мастер не запущен
 
   if (draft.step === "gender") {
     const t = text.toLowerCase();
