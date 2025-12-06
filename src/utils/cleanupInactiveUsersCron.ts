@@ -12,6 +12,7 @@ export function startCleanupInactiveUsersCron(
 ) {
   console.log("⏳ Starting cleanup cron for inactive users…");
 
+  // ПОМЕНЯТЬ ЛОГИКУ
   setInterval(async () => {
     try {
       // Получаем всех юзеров, которые есть в Redis
@@ -34,9 +35,6 @@ export function startCleanupInactiveUsersCron(
 
           // Записываем в Redis флаг is_bot
           await saveUserField(+rawId, "is_bot", "1");
-
-          // Важно: бота НЕ чистим!
-          continue;
         }
 
         const userId = Number(rawId);
