@@ -28,3 +28,12 @@ export async function getAllActiveUserIds() {
   const keys = await redis.keys(`${redisPrefix}user:*`);
   return keys.map((k) => k.replace(`${redisPrefix}user:`, ""));
 }
+
+export async function saveUserField(
+  userId: number,
+  field: string,
+  value: string,
+) {
+  const key = `${redisPrefix}user:${userId}`;
+  await redis.hset(key, field, value);
+}

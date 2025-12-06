@@ -4,7 +4,7 @@ import type { Update } from "telegraf/types";
 import { cleanupUser } from "./cleanupUser";
 import { GROUP_ID } from "./index";
 import { isUserInChat } from "./isUserInChat";
-import { getAllActiveUserIds } from "./redis";
+import { getAllActiveUserIds, getUser, saveUserField } from "./redis";
 
 export function startCleanupInactiveUsersCron(
   bot: Telegraf<Context<Update>>,
@@ -19,6 +19,26 @@ export function startCleanupInactiveUsersCron(
       if (!userIds.length) return;
 
       for (const rawId of userIds) {
+        const cached = await getUser(rawId);
+        if (cached?.is_bot === "1") {
+          // Уже знаем что бот → просто пропускаем
+          continue;
+        }
+
+        // Делаем реальную проверку через Telegram API
+        const member = await bot.telegram.getChatMember(GROUP_ID, +rawId);
+        const isBot = member.user.is_bot;
+
+        if (isBot) {
+          console.log(`🤖 Bot detected in Redis list → id ${rawId}`);
+
+          // Записываем в Redis флаг is_bot
+          await saveUserField(+rawId, "is_bot", "1");
+
+          // Важно: бота НЕ чистим!
+          continue;
+        }
+
         const userId = Number(rawId);
         if (!userId) continue;
 
