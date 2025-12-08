@@ -65,10 +65,6 @@ export const logCombotModeration = async (ctx: Context) => {
     `💬 Команда: <code>${escapeHtml(command)}</code>`,
     `🎯 Цель: ${targetMention}`,
     "",
-    `🔗 <a href="https://t.me/c/${String(GROUP_ID).replace(
-      "-100",
-      "",
-    )}/${msg.message_id}">Перейти к сообщению</a>`,
   ].join("\n");
 
   await ctx.telegram.sendMessage(ADMIN_GROUP_ID, formatted, {
