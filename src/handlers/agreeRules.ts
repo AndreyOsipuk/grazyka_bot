@@ -3,7 +3,8 @@ import type { Context, Telegraf } from "telegraf";
 import { appType } from "../const";
 import { userInviteLinks, userRequests } from "../core";
 import { AppTypes } from "../types/types";
-import { ADMIN_GROUP_ID, GROUP_ID } from "../utils";
+import { GROUP_ID } from "../utils";
+import { BLOCKED_USER_MESSAGE } from "../utils/blocked";
 import { generateNewInviteLink } from "../utils/generateNewInviteLink";
 import { isUserBanned } from "../utils/isUserBanned";
 import { isUserInChat } from "../utils/isUserInChat";
@@ -24,20 +25,9 @@ export const agreeRules = async (ctx: Context, bot: Telegraf) => {
   }
 
   if (await isUserBanned(ctx, GROUP_ID, userId)) {
-    await ctx.editMessageText(
-      "⛔️ Вам ранее был выдан бан в этом чате. Сначала свяжитесь с администраторами.",
-    );
-    await ctx.telegram.sendMessage(
-      ADMIN_GROUP_ID,
-      `⛔️ Пользователь 
-      ├ ID: <code>${userId}</code>
-      ├ <a href="tg://user?id=${userId}">${userId}</a>
-      ├ Имя: ${user.first_name || "—"}
-      ├ Фамилия: ${user.last_name || "—"}
-      └ Username: @${user.username || "—"}
-      пытается зайти, но он в бане.`,
-      { parse_mode: "HTML" },
-    );
+    // Заблокированному отвечаем ему самому и НЕ шумим в админ-группу —
+    // иначе спамер задолбит админов повторными попытками.
+    await ctx.editMessageText(BLOCKED_USER_MESSAGE);
     return;
   }
 

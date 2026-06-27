@@ -5,6 +5,9 @@ import { redisPrefix } from "../const";
 
 export const redis = new Redis(
   process.env.REDIS_URL || "redis://127.0.0.1:6379",
+  // lazyConnect — не открываем сокет при импорте модуля (важно для тестов и
+  // быстрого старта); ioredis сам подключится при первой команде.
+  { lazyConnect: true },
 );
 
 export async function saveUserActivity(user: User) {

@@ -5,7 +5,11 @@ import pkg from "telegraf/filters";
 
 import { appType } from "./const";
 import { agreeRules } from "./handlers/agreeRules";
-import { approveReject } from "./handlers/approveReject";
+import {
+  APPROVE_REJECT_BLOCK_RE,
+  approveReject,
+} from "./handlers/approveReject";
+import { blockedList, blockedListPage } from "./handlers/blocked";
 import { chatId } from "./handlers/chatid";
 import { chatMessage } from "./handlers/chatMessage";
 import { newChatMembers } from "./handlers/newChatMembers";
@@ -14,6 +18,7 @@ import { reset } from "./handlers/reset";
 import { rules } from "./handlers/rules";
 import { start } from "./handlers/start";
 import { stats } from "./handlers/stats";
+import { unban, unblockAction } from "./handlers/unban";
 import { whois } from "./handlers/whois";
 import { AppTypes } from "./types/types";
 import { BOT_TOKEN } from "./utils";
@@ -56,13 +61,17 @@ bot.command("find_profiles", findProfiles);
 bot.command("delprofile", deleteProfileByAdmin);
 bot.command("profile", showUserProfile);
 bot.command("profiles", profilesInlineStart);
+bot.command("unban", unban);
+bot.command("blocked", blockedList);
 
 bot.action(/^profiles:/, profilesInlineFilter);
+bot.action(/^blocked:p=(\d+)$/, blockedListPage);
+bot.action(/^unblock_(\d+)$/, unblockAction);
 bot.action("report_claim", reportClaim);
 bot.action("agree_rules", async (ctx) => agreeRules(ctx, bot));
 
 if (appType == AppTypes.gryzuka) {
-  bot.action(/^(approve|reject)_(\d+)$/, approveReject);
+  bot.action(APPROVE_REJECT_BLOCK_RE, approveReject);
 }
 
 bot.on(pkg.message("new_chat_members"), newChatMembers as never);

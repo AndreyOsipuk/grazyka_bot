@@ -4,6 +4,18 @@ import type { UserRequest } from "../types/types";
 import { ADMIN_GROUP_ID, TIME_LIMIT_MINUTES } from "./index";
 import { pluralizeMinutesGenitive } from "./pluralizeMinutes";
 
+// Клавиатура карточки запроса в админ-группе. Вынесена отдельно, чтобы покрыть
+// тестом набор кнопок и их callback_data.
+export function buildAdminKeyboard(userId: number) {
+  return Markup.inlineKeyboard([
+    [
+      Markup.button.callback("✅ Одобрить", `approve_${userId}`),
+      Markup.button.callback("❌ Отклонить", `reject_${userId}`),
+    ],
+    [Markup.button.callback("🚫 Заблокировать", `block_${userId}`)],
+  ]);
+}
+
 export async function sendRequestToAdmins(
   ctx: Context,
   userId: number,
@@ -30,10 +42,7 @@ export async function sendRequestToAdmins(
     text += `\n\n🔗 <b>Новая ссылка сгенерирована</b>`;
   }
 
-  const kb = Markup.inlineKeyboard([
-    Markup.button.callback("✅ Одобрить", `approve_${userId}`),
-    Markup.button.callback("❌ Отклонить", `reject_${userId}`),
-  ]);
+  const kb = buildAdminKeyboard(userId);
 
   try {
     const sent = await ctx.telegram.sendMessage(ADMIN_GROUP_ID, text, {

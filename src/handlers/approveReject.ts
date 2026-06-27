@@ -6,9 +6,14 @@ import {
   isAdmin,
   TIME_LIMIT_MINUTES,
 } from "../utils";
+import { BLOCKED_USER_MESSAGE, blockUser } from "../utils/blocked";
 import { closeAdminRequest } from "../utils/closeAdminRequest";
 import { generateNewInviteLink } from "../utils/generateNewInviteLink";
 import { pluralizeMinutesGenitive } from "../utils/pluralizeMinutes";
+
+// Регекс callback-кнопок карточки запроса. Экспортируется, чтобы bot.ts и тесты
+// использовали один источник правды.
+export const APPROVE_REJECT_BLOCK_RE = /^(approve|reject|block)_(\d+)$/;
 
 // eslint-disable-next-line sonarjs/cognitive-complexity
 export const approveReject = async (ctx: ActionContext) => {
@@ -38,10 +43,15 @@ export const approveReject = async (ctx: ActionContext) => {
   }
 
   if (userInfo.status && userInfo.status !== "pending") {
-    return ctx.answerCbQuery(
-      `Заявка уже ${userInfo.status === "approved" ? "одобрена" : "отклонена"}.`,
-      { show_alert: true },
-    );
+    const statusLabels: Record<string, string> = {
+      approved: "одобрена",
+      blocked: "заблокирована",
+      rejected: "отклонена",
+    };
+    const statusLabel = statusLabels[userInfo.status] || "обработана";
+    return ctx.answerCbQuery(`Заявка уже ${statusLabel}.`, {
+      show_alert: true,
+    });
   }
 
   if (action === "approve") {
@@ -96,6 +106,47 @@ export const approveReject = async (ctx: ActionContext) => {
         ADMIN_GROUP_ID,
         `❌ Ошибка отправки ссылки пользователю: ${err.message || e}`,
       );
+    }
+  } else if (action === "block") {
+    userInviteLinks.delete(targetId);
+    userInfo.approved = false;
+    userInfo.status = "blocked";
+    userRequests.set(targetId, userInfo);
+
+    // Бан в группе — работает и для тех, кто ещё не вступил. Это и есть
+    // «шлагбаум»: после бана agreeRules не пропустит повторные запросы.
+    try {
+      await ctx.telegram.banChatMember(GROUP_ID, targetId);
+    } catch (e) {
+      console.error("Ошибка бана пользователя:", e);
+      await ctx.telegram.sendMessage(
+        ADMIN_GROUP_ID,
+        `❌ Не удалось забанить пользователя ${targetId} в группе: ${(e as Error)?.message || e}`,
+      );
+    }
+
+    try {
+      await blockUser(targetId, {
+        first_name: userInfo.first_name || "",
+        last_name: userInfo.last_name || "",
+        username: userInfo.username || "",
+        blocked_by: admin.first_name || String(admin.id),
+      });
+    } catch (e) {
+      console.error("Ошибка записи в реестр заблокированных:", e);
+    }
+
+    await closeAdminRequest(
+      ctx,
+      targetId,
+      userRequests,
+      `🚫 Пользователь ${userInfo.first_name || targetId} заблокирован администратором ${admin.first_name}`,
+    );
+
+    try {
+      await ctx.telegram.sendMessage(targetId, BLOCKED_USER_MESSAGE);
+    } catch (e) {
+      console.error("Ошибка отправки уведомления о блокировке:", e);
     }
   } else {
     // reject
