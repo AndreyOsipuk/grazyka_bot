@@ -19,8 +19,8 @@ function renderItem(b: BlockedListItem): { line: string; button: CbButton } {
   return {
     line: `• ${tag} — <code>${b.id}</code>, ${when}, кем: ${by}`,
     button: {
-      text: `Разблокировать ${b.username ? "@" + b.username : b.id}`,
-      callback_data: `unblock_${b.id}`,
+      text: `Разбанить ${b.username ? "@" + b.username : b.id}`,
+      callback_data: `unban_${b.id}`,
     },
   };
 }
@@ -34,14 +34,14 @@ async function buildView(page: number) {
 
   if (total === 0) {
     return {
-      text: "✅ Заблокированных пользователей нет.",
+      text: "✅ Забаненных пользователей нет.",
       keyboard: [] as CbButton[][],
     };
   }
 
   const rendered = data.map(renderItem);
   const text = [
-    `🚫 Заблокировано: ${total}`,
+    `🚫 Забанено: ${total}`,
     `Страница ${safePage + 1} из ${totalPages}`,
     "",
     ...rendered.map((r) => r.line),
@@ -51,17 +51,17 @@ async function buildView(page: number) {
 
   const nav: CbButton[] = [];
   if (safePage > 0) {
-    nav.push({ text: "‹ Назад", callback_data: `blocked:p=${safePage - 1}` });
+    nav.push({ text: "‹ Назад", callback_data: `banned:p=${safePage - 1}` });
   }
   if (safePage + 1 < totalPages) {
-    nav.push({ text: "Вперёд ›", callback_data: `blocked:p=${safePage + 1}` });
+    nav.push({ text: "Вперёд ›", callback_data: `banned:p=${safePage + 1}` });
   }
   if (nav.length) keyboard.push(nav);
 
   return { text, keyboard };
 }
 
-export const blockedList = async (ctx: MessageContext) => {
+export const bannedList = async (ctx: MessageContext) => {
   if (!isAdmin(ctx.message.from.id)) {
     return;
   }
@@ -73,7 +73,7 @@ export const blockedList = async (ctx: MessageContext) => {
   });
 };
 
-export const blockedListPage = async (ctx: ActionContext) => {
+export const bannedListPage = async (ctx: ActionContext) => {
   const admin = ctx.from;
   if (!admin || !isAdmin(admin.id)) {
     return ctx.answerCbQuery("❌ У вас нет прав для этого действия!", {

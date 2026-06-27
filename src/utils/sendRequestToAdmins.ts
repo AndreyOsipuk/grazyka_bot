@@ -12,7 +12,7 @@ export function buildAdminKeyboard(userId: number) {
       Markup.button.callback("✅ Одобрить", `approve_${userId}`),
       Markup.button.callback("❌ Отклонить", `reject_${userId}`),
     ],
-    [Markup.button.callback("🚫 Заблокировать", `block_${userId}`)],
+    [Markup.button.callback("🚫 Забанить", `ban_${userId}`)],
   ]);
 }
 

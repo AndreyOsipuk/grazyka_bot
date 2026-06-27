@@ -1,5 +1,5 @@
 import { redisPrefix } from "../const";
-import { redis } from "./redis";
+import { indexUsername, redis } from "./redis";
 
 export type Blocked = {
   first_name: string;
@@ -9,10 +9,10 @@ export type Blocked = {
   blocked_by: string;
 };
 
-// Сообщение, которое получает заблокированный пользователь (при блокировке
+// Сообщение, которое получает забаненный пользователь (при бане
 // и при любой повторной попытке вступить).
-export const BLOCKED_USER_MESSAGE =
-  "⛔️ Вы заблокированы администратором и больше не можете отправлять запросы на вступление.\n\n" +
+export const BANNED_USER_MESSAGE =
+  "⛔️ Вы забанены администратором и больше не можете отправлять запросы на вступление.\n\n" +
   "Если считаете, что это ошибка - свяжитесь с поддержкой.";
 
 const blockedKey = (userId: number | string) =>
@@ -29,6 +29,9 @@ export async function blockUser(
     blocked_at: String(data.blocked_at ?? Date.now()),
     blocked_by: data.blocked_by || "",
   });
+
+  // чтобы /unban @username работал даже для тех, кто не писал в группе
+  await indexUsername(userId, data.username);
 }
 
 export async function unblockUser(userId: number | string): Promise<void> {
@@ -87,6 +90,24 @@ export function paginate<T>(
 }
 
 export type BlockedListItem = Blocked & { id: string };
+
+// Поиск забаненного по @username в реестре. Bot API не резолвит произвольные
+// username, но у нас сохранён username на момент бана — этого хватает для /unban.
+export async function findBlockedByUsername(
+  username: string,
+): Promise<BlockedListItem | null> {
+  const u = username.replace(/^@/, "").toLowerCase();
+  if (!u) return null;
+
+  const ids = await getAllBlockedUserIds();
+  for (const id of ids) {
+    const b = await getBlocked(id);
+    if (b?.username && b.username.toLowerCase() === u) {
+      return { ...b, id };
+    }
+  }
+  return null;
+}
 
 export async function listBlocked(
   limit = 20,

@@ -4,7 +4,7 @@ import { appType } from "../const";
 import { userInviteLinks, userRequests } from "../core";
 import { AppTypes } from "../types/types";
 import { GROUP_ID } from "../utils";
-import { BLOCKED_USER_MESSAGE } from "../utils/blocked";
+import { BANNED_USER_MESSAGE } from "../utils/blocked";
 import { generateNewInviteLink } from "../utils/generateNewInviteLink";
 import { isUserBanned } from "../utils/isUserBanned";
 import { isUserInChat } from "../utils/isUserInChat";
@@ -25,9 +25,9 @@ export const agreeRules = async (ctx: Context, bot: Telegraf) => {
   }
 
   if (await isUserBanned(ctx, GROUP_ID, userId)) {
-    // Заблокированному отвечаем ему самому и НЕ шумим в админ-группу —
+    // Забаненному отвечаем ему самому и НЕ шумим в админ-группу —
     // иначе спамер задолбит админов повторными попытками.
-    await ctx.editMessageText(BLOCKED_USER_MESSAGE);
+    await ctx.editMessageText(BANNED_USER_MESSAGE);
     return;
   }
 

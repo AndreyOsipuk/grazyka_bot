@@ -49,6 +49,15 @@ export const launch = async (bot: Telegraf) => {
           command: "delprofile",
           description: "Удалить анкету (reply)",
         },
+        {
+          command: "ban",
+          description: "Забанить (reply / id / @username)",
+        },
+        {
+          command: "unban",
+          description: "Разбанить (reply / id / @username)",
+        },
+        { command: "banned", description: "Список забаненных" },
       ],
       { scope: { type: "chat", chat_id: ADMIN_GROUP_ID } },
     );
@@ -78,6 +87,28 @@ export const launch = async (bot: Telegraf) => {
     ],
     { scope: { type: "chat", chat_id: GROUP_ID } },
   );
+
+  // === 4️⃣ Команды для АДМИНОВ в основном чате (видят только админы) ===
+  if (appType === AppTypes.gryzuka) {
+    await bot.telegram.setMyCommands(
+      [
+        {
+          command: "whois",
+          description: "Узнать ID пользователя (reply или /whois <id>)",
+        },
+        {
+          command: "ban",
+          description: "Забанить (reply / id / @username)",
+        },
+        {
+          command: "unban",
+          description: "Разбанить (reply / id / @username)",
+        },
+        { command: "banned", description: "Список забаненных" },
+      ],
+      { scope: { type: "chat_administrators", chat_id: GROUP_ID } },
+    );
+  }
 
   try {
     bot.launch();

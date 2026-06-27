@@ -6,14 +6,14 @@ import {
   isAdmin,
   TIME_LIMIT_MINUTES,
 } from "../utils";
-import { BLOCKED_USER_MESSAGE, blockUser } from "../utils/blocked";
 import { closeAdminRequest } from "../utils/closeAdminRequest";
 import { generateNewInviteLink } from "../utils/generateNewInviteLink";
 import { pluralizeMinutesGenitive } from "../utils/pluralizeMinutes";
+import { performBan } from "./ban";
 
 // Регекс callback-кнопок карточки запроса. Экспортируется, чтобы bot.ts и тесты
 // использовали один источник правды.
-export const APPROVE_REJECT_BLOCK_RE = /^(approve|reject|block)_(\d+)$/;
+export const APPROVE_REJECT_BAN_RE = /^(approve|reject|ban)_(\d+)$/;
 
 // eslint-disable-next-line sonarjs/cognitive-complexity
 export const approveReject = async (ctx: ActionContext) => {
@@ -107,47 +107,24 @@ export const approveReject = async (ctx: ActionContext) => {
         `❌ Ошибка отправки ссылки пользователю: ${err.message || e}`,
       );
     }
-  } else if (action === "block") {
-    userInviteLinks.delete(targetId);
+  } else if (action === "ban") {
     userInfo.approved = false;
     userInfo.status = "blocked";
     userRequests.set(targetId, userInfo);
 
-    // Бан в группе — работает и для тех, кто ещё не вступил. Это и есть
-    // «шлагбаум»: после бана agreeRules не пропустит повторные запросы.
-    try {
-      await ctx.telegram.banChatMember(GROUP_ID, targetId);
-    } catch (e) {
-      console.error("Ошибка бана пользователя:", e);
-      await ctx.telegram.sendMessage(
-        ADMIN_GROUP_ID,
-        `❌ Не удалось забанить пользователя ${targetId} в группе: ${(e as Error)?.message || e}`,
-      );
-    }
-
-    try {
-      await blockUser(targetId, {
-        first_name: userInfo.first_name || "",
-        last_name: userInfo.last_name || "",
-        username: userInfo.username || "",
-        blocked_by: admin.first_name || String(admin.id),
-      });
-    } catch (e) {
-      console.error("Ошибка записи в реестр заблокированных:", e);
-    }
+    await performBan(
+      ctx,
+      targetId,
+      userInfo,
+      admin.first_name || String(admin.id),
+    );
 
     await closeAdminRequest(
       ctx,
       targetId,
       userRequests,
-      `🚫 Пользователь ${userInfo.first_name || targetId} заблокирован администратором ${admin.first_name}`,
+      `🚫 Пользователь ${userInfo.first_name || targetId} забанен администратором ${admin.first_name}`,
     );
-
-    try {
-      await ctx.telegram.sendMessage(targetId, BLOCKED_USER_MESSAGE);
-    } catch (e) {
-      console.error("Ошибка отправки уведомления о блокировке:", e);
-    }
   } else {
     // reject
     userInviteLinks.delete(targetId);

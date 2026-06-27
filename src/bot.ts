@@ -5,11 +5,9 @@ import pkg from "telegraf/filters";
 
 import { appType } from "./const";
 import { agreeRules } from "./handlers/agreeRules";
-import {
-  APPROVE_REJECT_BLOCK_RE,
-  approveReject,
-} from "./handlers/approveReject";
-import { blockedList, blockedListPage } from "./handlers/blocked";
+import { APPROVE_REJECT_BAN_RE, approveReject } from "./handlers/approveReject";
+import { ban, quickBan } from "./handlers/ban";
+import { bannedList, bannedListPage } from "./handlers/banned";
 import { chatId } from "./handlers/chatid";
 import { chatMessage } from "./handlers/chatMessage";
 import { newChatMembers } from "./handlers/newChatMembers";
@@ -18,7 +16,7 @@ import { reset } from "./handlers/reset";
 import { rules } from "./handlers/rules";
 import { start } from "./handlers/start";
 import { stats } from "./handlers/stats";
-import { unban, unblockAction } from "./handlers/unban";
+import { unban, unbanAction } from "./handlers/unban";
 import { whois } from "./handlers/whois";
 import { AppTypes } from "./types/types";
 import { BOT_TOKEN } from "./utils";
@@ -61,17 +59,19 @@ bot.command("find_profiles", findProfiles);
 bot.command("delprofile", deleteProfileByAdmin);
 bot.command("profile", showUserProfile);
 bot.command("profiles", profilesInlineStart);
+bot.command("ban", ban);
 bot.command("unban", unban);
-bot.command("blocked", blockedList);
+bot.command("banned", bannedList);
 
 bot.action(/^profiles:/, profilesInlineFilter);
-bot.action(/^blocked:p=(\d+)$/, blockedListPage);
-bot.action(/^unblock_(\d+)$/, unblockAction);
+bot.action(/^banned:p=(\d+)$/, bannedListPage);
+bot.action(/^unban_(\d+)$/, unbanAction);
+bot.action(/^qban_(\d+)$/, quickBan);
 bot.action("report_claim", reportClaim);
 bot.action("agree_rules", async (ctx) => agreeRules(ctx, bot));
 
 if (appType == AppTypes.gryzuka) {
-  bot.action(APPROVE_REJECT_BLOCK_RE, approveReject);
+  bot.action(APPROVE_REJECT_BAN_RE, approveReject);
 }
 
 bot.on(pkg.message("new_chat_members"), newChatMembers as never);

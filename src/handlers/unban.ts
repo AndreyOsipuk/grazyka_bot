@@ -3,6 +3,7 @@ import type { ActionContext, MessageContext } from "../types/types";
 import { GROUP_ID, isAdmin } from "../utils";
 import { unblockUser } from "../utils/blocked";
 import { clearSilenceTimer } from "../utils/clearSilenceTimer";
+import { resolveUserId } from "../utils/resolveUserId";
 
 // Снимает бан в группе и чистит локальное состояние/реестр. Возвращает true при успехе.
 async function doUnban(
@@ -36,8 +37,8 @@ export const unban = async (ctx: MessageContext) => {
   let userId: number | null = null;
   if (reply?.from) {
     userId = reply.from.id;
-  } else if (arg && /^\d+$/.test(arg)) {
-    userId = Number(arg);
+  } else if (arg) {
+    userId = await resolveUserId(arg);
   }
 
   if (!userId) {
@@ -45,21 +46,29 @@ export const unban = async (ctx: MessageContext) => {
       [
         "Использование:",
         "• Ответьте /unban на сообщение пользователя",
-        "• или /unban <user_id> (числом)",
-      ].join("\n"),
+        "• или /unban &lt;user_id&gt; (числом)",
+        "• или /unban @username",
+        "",
+        arg
+          ? "Не нашёл такого пользователя в реестре. Попробуйте по числовому id."
+          : "",
+      ]
+        .filter(Boolean)
+        .join("\n"),
+      { parse_mode: "HTML" },
     );
   }
 
   const ok = await doUnban(ctx, userId);
   await ctx.reply(
     ok
-      ? `✅ Пользователь <code>${userId}</code> разблокирован.`
-      : `❌ Не удалось разблокировать <code>${userId}</code>. Подробности в логах.`,
+      ? `✅ Пользователь <code>${userId}</code> разбанен.`
+      : `❌ Не удалось разбанить <code>${userId}</code>. Подробности в логах.`,
     { parse_mode: "HTML" },
   );
 };
 
-export const unblockAction = async (ctx: ActionContext) => {
+export const unbanAction = async (ctx: ActionContext) => {
   const admin = ctx.from;
   if (!admin || !isAdmin(admin.id)) {
     return ctx.answerCbQuery("❌ У вас нет прав для этого действия!", {

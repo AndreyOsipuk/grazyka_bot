@@ -35,6 +35,9 @@ export const whois = async (ctx: MessageContext) => {
     );
   }
 
+  // Кнопку бана не показываем на ботах и других админах.
+  const canBan = !user.is_bot && !isAdmin(user.id);
+
   await ctx.reply(
     [
       `ID: <code>${user.id}</code>`,
@@ -42,6 +45,15 @@ export const whois = async (ctx: MessageContext) => {
       `Username: @${user.username || "—"}`,
       `Is bot: ${user.is_bot ? "yes" : "no"}`,
     ].join("\n"),
-    { parse_mode: "HTML" },
+    {
+      parse_mode: "HTML",
+      reply_markup: canBan
+        ? {
+            inline_keyboard: [
+              [{ text: "🚫 Забанить", callback_data: `qban_${user.id}` }],
+            ],
+          }
+        : undefined,
+    },
   );
 };
