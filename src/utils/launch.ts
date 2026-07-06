@@ -58,6 +58,15 @@ export const launch = async (bot: Telegraf) => {
           description: "Разбанить (reply / id / @username)",
         },
         { command: "banned", description: "Список забаненных" },
+        {
+          command: "memeban",
+          description: "Запретить слать мемы (reply / id / @username)",
+        },
+        {
+          command: "memeunban",
+          description: "Вернуть право на мемы (reply / id / @username)",
+        },
+        { command: "memebanned", description: "Список забаненных по мемам" },
       ],
       { scope: { type: "chat", chat_id: ADMIN_GROUP_ID } },
     );
@@ -105,6 +114,15 @@ export const launch = async (bot: Telegraf) => {
           description: "Разбанить (reply / id / @username)",
         },
         { command: "banned", description: "Список забаненных" },
+        {
+          command: "memeban",
+          description: "Запретить слать мемы (reply на мем)",
+        },
+        {
+          command: "memeunban",
+          description: "Вернуть право на мемы (reply / id / @username)",
+        },
+        { command: "memebanned", description: "Список забаненных по мемам" },
       ],
       { scope: { type: "chat_administrators", chat_id: GROUP_ID } },
     );

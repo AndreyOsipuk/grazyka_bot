@@ -10,6 +10,13 @@ import { ban, quickBan } from "./handlers/ban";
 import { bannedList, bannedListPage } from "./handlers/banned";
 import { chatId } from "./handlers/chatid";
 import { chatMessage } from "./handlers/chatMessage";
+import {
+  memeBan,
+  memeBannedList,
+  memeBannedListPage,
+  memeUnban,
+  memeUnbanAction,
+} from "./handlers/memeBan";
 import { memeRepost } from "./handlers/memeRepost";
 import { newChatMembers } from "./handlers/newChatMembers";
 import { report } from "./handlers/report";
@@ -63,11 +70,16 @@ bot.command("profiles", profilesInlineStart);
 bot.command("ban", ban);
 bot.command("unban", unban);
 bot.command("banned", bannedList);
+bot.command("memeban", memeBan);
+bot.command("memeunban", memeUnban);
+bot.command("memebanned", memeBannedList);
 
 bot.action(/^profiles:/, profilesInlineFilter);
 bot.action(/^banned:p=(\d+)$/, bannedListPage);
 bot.action(/^unban_(\d+)$/, unbanAction);
 bot.action(/^qban_(\d+)$/, quickBan);
+bot.action(/^memebanned:p=(\d+)$/, memeBannedListPage);
+bot.action(/^memeunban_(\d+)$/, memeUnbanAction);
 bot.action("report_claim", reportClaim);
 bot.action("agree_rules", async (ctx) => agreeRules(ctx, bot));
 

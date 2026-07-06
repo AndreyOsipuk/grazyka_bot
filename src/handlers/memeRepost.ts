@@ -1,6 +1,8 @@
 import type { Context } from "telegraf";
+import type { TelegramEmoji } from "telegraf/types";
 
 import { ADMIN_GROUP_ID, GROUP_ID, MEME_CHANNEL_ID } from "../utils";
+import { isMemeBanned } from "../utils/memeBan";
 import { hasMemeTag, stripMemeTag } from "../utils/memeTag";
 import { messageHasPhoto } from "../utils/messageHasPhoto";
 
@@ -8,31 +10,32 @@ import { messageHasPhoto } from "../utils/messageHasPhoto";
 // уведомляем об ошибке канала один раз за сессию.
 let notifiedChannelError = false;
 
-export const memeRepost = async (ctx: Context) => {
-  if (!MEME_CHANNEL_ID) return; // фича выключена
-  if (!ctx.chat || ctx.chat.id !== GROUP_ID) return;
-
-  const user = ctx.from;
-  if (!user || user.is_bot) return;
-  if (!ctx.message) return;
-
-  // Репост открыт всем участникам чата (мем с #мем улетает в канал).
-
-  const message = ctx.message;
-  if (!messageHasPhoto(message)) return;
-
-  const caption = "caption" in message ? (message.caption ?? "") : "";
-  if (!hasMemeTag(caption)) return;
-
-  const cleaned = stripMemeTag(caption);
-
+async function react(
+  ctx: Context,
+  chatId: number,
+  messageId: number,
+  emoji: TelegramEmoji,
+) {
   try {
-    await ctx.telegram.copyMessage(
-      MEME_CHANNEL_ID,
-      ctx.chat.id,
-      message.message_id,
-      { caption: cleaned },
-    );
+    await ctx.telegram.setMessageReaction(chatId, messageId, [
+      { type: "emoji", emoji },
+    ]);
+  } catch (e) {
+    console.error("Не удалось поставить реакцию на мем:", e);
+  }
+}
+
+async function copyToChannel(
+  ctx: Context,
+  chatId: number,
+  messageId: number,
+  caption: string,
+): Promise<boolean> {
+  try {
+    await ctx.telegram.copyMessage(MEME_CHANNEL_ID, chatId, messageId, {
+      caption,
+    });
+    return true;
   } catch (e) {
     console.error("Ошибка репоста мема в канал:", e);
     if (!notifiedChannelError) {
@@ -46,15 +49,37 @@ export const memeRepost = async (ctx: Context) => {
         // не смогли уведомить админку — уже залогировали выше
       }
     }
+    return false;
+  }
+}
+
+export const memeRepost = async (ctx: Context) => {
+  if (!MEME_CHANNEL_ID) return; // фича выключена
+  if (!ctx.chat || ctx.chat.id !== GROUP_ID) return;
+
+  const user = ctx.from;
+  if (!user || user.is_bot) return;
+  if (!ctx.message) return;
+
+  const message = ctx.message;
+  if (!messageHasPhoto(message)) return;
+
+  const caption = "caption" in message ? (message.caption ?? "") : "";
+  if (!hasMemeTag(caption)) return;
+
+  const chatId = ctx.chat.id;
+
+  // Забаненному по мемам — не репостим, ставим 👎 вместо 👍.
+  if (await isMemeBanned(user.id)) {
+    await react(ctx, chatId, message.message_id, "👎");
     return;
   }
 
-  // Успех — ставим реакцию 👍 на исходное сообщение.
-  try {
-    await ctx.telegram.setMessageReaction(ctx.chat.id, message.message_id, [
-      { type: "emoji", emoji: "👍" },
-    ]);
-  } catch (e) {
-    console.error("Не удалось поставить реакцию на мем:", e);
-  }
+  const ok = await copyToChannel(
+    ctx,
+    chatId,
+    message.message_id,
+    stripMemeTag(caption),
+  );
+  if (ok) await react(ctx, chatId, message.message_id, "👍");
 };

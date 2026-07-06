@@ -54,7 +54,7 @@ export async function performBan(
 }
 
 // Достаёт id и инфо цели из reply или аргумента (@username / id).
-async function resolveBanTarget(
+export async function resolveBanTarget(
   ctx: MessageContext,
   reply: MessageContext["message"]["reply_to_message"],
   arg: string | undefined,
