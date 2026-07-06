@@ -9,7 +9,7 @@ import { getRulesText } from "../utils/getRulesText";
 
 // Строка с каналом мемов добавляется к приветствию, только если канал настроен.
 const memeLine = MEME_CHANNEL_LINK
-  ? `\n\n📸 А лучшие мемы сообщества — в нашем канале: <a href="${MEME_CHANNEL_LINK}">${MEME_CHANNEL_ID}</a>`
+  ? `\n\n📸 А лучшие мемы сообщества - в нашем канале: <a href="${MEME_CHANNEL_LINK}">${MEME_CHANNEL_ID}</a>`
   : "";
 
 const rulesText = getRulesText() + memeLine;
