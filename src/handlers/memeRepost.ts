@@ -1,7 +1,12 @@
 import type { Context } from "telegraf";
 import type { TelegramEmoji } from "telegraf/types";
 
-import { ADMIN_GROUP_ID, GROUP_ID, MEME_CHANNEL_ID } from "../utils";
+import {
+  ADMIN_GROUP_ID,
+  GROUP_ID,
+  MEME_CHANNEL_ID,
+  MEME_CHANNEL_LINK,
+} from "../utils";
 import { isMemeBanned } from "../utils/memeBan";
 import { hasMemeTag, stripMemeTag } from "../utils/memeTag";
 import { messageHasPhoto } from "../utils/messageHasPhoto";
@@ -25,17 +30,23 @@ async function react(
   }
 }
 
+// Копирует мем в канал. Возвращает message_id поста в канале или null при ошибке.
 async function copyToChannel(
   ctx: Context,
   chatId: number,
   messageId: number,
   caption: string,
-): Promise<boolean> {
+): Promise<number | null> {
   try {
-    await ctx.telegram.copyMessage(MEME_CHANNEL_ID, chatId, messageId, {
-      caption,
-    });
-    return true;
+    const res = await ctx.telegram.copyMessage(
+      MEME_CHANNEL_ID,
+      chatId,
+      messageId,
+      {
+        caption,
+      },
+    );
+    return res.message_id;
   } catch (e) {
     console.error("Ошибка репоста мема в канал:", e);
     if (!notifiedChannelError) {
@@ -49,7 +60,35 @@ async function copyToChannel(
         // не смогли уведомить админку — уже залогировали выше
       }
     }
-    return false;
+    return null;
+  }
+}
+
+// Отвечает автору мема ссылкой на пост в канале (только для публичного канала).
+async function replyWithChannelLink(
+  ctx: Context,
+  chatId: number,
+  replyToId: number,
+  channelMsgId: number,
+) {
+  if (!MEME_CHANNEL_LINK) return; // приватный канал — ссылку на пост не строим
+  try {
+    await ctx.telegram.sendMessage(chatId, "📸 Твой мем в канале 👇", {
+      reply_parameters: { message_id: replyToId },
+      disable_notification: true,
+      reply_markup: {
+        inline_keyboard: [
+          [
+            {
+              text: "Открыть в канале",
+              url: `${MEME_CHANNEL_LINK}/${channelMsgId}`,
+            },
+          ],
+        ],
+      },
+    });
+  } catch (e) {
+    console.error("Не удалось отправить ссылку на мем:", e);
   }
 }
 
@@ -75,11 +114,15 @@ export const memeRepost = async (ctx: Context) => {
     return;
   }
 
-  const ok = await copyToChannel(
+  const channelMsgId = await copyToChannel(
     ctx,
     chatId,
     message.message_id,
     stripMemeTag(caption),
   );
-  if (ok) await react(ctx, chatId, message.message_id, "👍");
+
+  if (channelMsgId !== null) {
+    await react(ctx, chatId, message.message_id, "👍");
+    await replyWithChannelLink(ctx, chatId, message.message_id, channelMsgId);
+  }
 };
