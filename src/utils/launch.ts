@@ -9,6 +9,7 @@ export const launch = async (bot: Telegraf) => {
   await bot.telegram.setMyCommands(
     [
       { command: "start", description: "Начать" },
+      { command: "help", description: "Список команд" },
       { command: "rules", description: "Показать правила группы" },
       { command: "anketa", description: "Создать или обновить анкету" },
       { command: "myprofile", description: "Показать мою анкету" },
@@ -25,6 +26,7 @@ export const launch = async (bot: Telegraf) => {
     await bot.telegram.setMyCommands(
       [
         { command: "start", description: "Начать" },
+        { command: "help", description: "Список всех команд" },
         { command: "rules", description: "Показать правила группы" },
         {
           command: "whois",
@@ -101,6 +103,7 @@ export const launch = async (bot: Telegraf) => {
   if (appType === AppTypes.gryzuka) {
     await bot.telegram.setMyCommands(
       [
+        { command: "help", description: "Список всех команд" },
         {
           command: "whois",
           description: "Узнать ID пользователя (reply или /whois <id>)",

@@ -10,6 +10,7 @@ import { ban, quickBan } from "./handlers/ban";
 import { bannedList, bannedListPage } from "./handlers/banned";
 import { chatId } from "./handlers/chatid";
 import { chatMessage } from "./handlers/chatMessage";
+import { help } from "./handlers/help";
 import {
   memeBan,
   memeBannedList,
@@ -54,6 +55,7 @@ const bot = new Telegraf(BOT_TOKEN as string);
 
 bot.start(start);
 
+bot.command("help", help);
 bot.command("rules", rules);
 bot.command("whois", whois);
 bot.command("chatid", chatId);
