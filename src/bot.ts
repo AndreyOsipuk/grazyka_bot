@@ -10,6 +10,7 @@ import { ban, quickBan } from "./handlers/ban";
 import { bannedList, bannedListPage } from "./handlers/banned";
 import { chatId } from "./handlers/chatid";
 import { chatMessage } from "./handlers/chatMessage";
+import { memeRepost } from "./handlers/memeRepost";
 import { newChatMembers } from "./handlers/newChatMembers";
 import { report } from "./handlers/report";
 import { reset } from "./handlers/reset";
@@ -77,6 +78,7 @@ if (appType == AppTypes.gryzuka) {
 bot.on(pkg.message("new_chat_members"), newChatMembers as never);
 bot.on("message", async (ctx) => {
   await chatMessage(ctx);
+  await memeRepost(ctx);
   await logCombotModeration(ctx);
 });
 bot.on(pkg.message("text"), handleProfileWizardMessage);

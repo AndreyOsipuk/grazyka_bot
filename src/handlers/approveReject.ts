@@ -75,7 +75,7 @@ export const approveReject = async (ctx: ActionContext) => {
       ctx,
       targetId,
       userRequests,
-      `✅ Запрос от ${userInfo.first_name || targetId} одобрен администратором ${admin.first_name}\n🔗 Новая ссылка отправлена пользователю`,
+      `✅ Запрос от ${userInfo.first_name || targetId} (ID: <code>${targetId}</code>) одобрен администратором ${admin.first_name}\n🔗 Новая ссылка отправлена пользователю`,
     );
 
     const successMsg = [
@@ -123,7 +123,7 @@ export const approveReject = async (ctx: ActionContext) => {
       ctx,
       targetId,
       userRequests,
-      `🚫 Пользователь ${userInfo.first_name || targetId} забанен администратором ${admin.first_name}`,
+      `🚫 Пользователь ${userInfo.first_name || targetId} (ID: <code>${targetId}</code>) забанен администратором ${admin.first_name}`,
     );
   } else {
     // reject
@@ -136,7 +136,7 @@ export const approveReject = async (ctx: ActionContext) => {
       ctx,
       targetId,
       userRequests,
-      `❌ Запрос от ${userInfo.first_name || targetId} отклонен администратором ${admin.first_name}`,
+      `❌ Запрос от ${userInfo.first_name || targetId} (ID: <code>${targetId}</code>) отклонен администратором ${admin.first_name}`,
     );
 
     try {

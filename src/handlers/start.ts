@@ -4,9 +4,15 @@ import { Markup } from "telegraf";
 import { appType } from "../const";
 import { userInviteLinks, userRequests } from "../core";
 import { AppTypes } from "../types/types";
+import { MEME_CHANNEL_ID, MEME_CHANNEL_LINK } from "../utils";
 import { getRulesText } from "../utils/getRulesText";
 
-const rulesText = getRulesText();
+// Строка с каналом мемов добавляется к приветствию, только если канал настроен.
+const memeLine = MEME_CHANNEL_LINK
+  ? `\n\n📸 А лучшие мемы сообщества — в нашем канале: <a href="${MEME_CHANNEL_LINK}">${MEME_CHANNEL_ID}</a>`
+  : "";
+
+const rulesText = getRulesText() + memeLine;
 
 export const start = async (ctx: Context) => {
   const user = ctx.from;
