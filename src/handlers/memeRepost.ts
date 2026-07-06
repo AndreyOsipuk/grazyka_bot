@@ -1,6 +1,6 @@
 import type { Context } from "telegraf";
 
-import { ADMIN_GROUP_ID, GROUP_ID, isAdmin, MEME_CHANNEL_ID } from "../utils";
+import { ADMIN_GROUP_ID, GROUP_ID, MEME_CHANNEL_ID } from "../utils";
 import { hasMemeTag, stripMemeTag } from "../utils/memeTag";
 import { messageHasPhoto } from "../utils/messageHasPhoto";
 
@@ -16,8 +16,7 @@ export const memeRepost = async (ctx: Context) => {
   if (!user || user.is_bot) return;
   if (!ctx.message) return;
 
-  // Репостим только мемы от админов — чтобы канал не засоряли участники.
-  if (!isAdmin(user.id)) return;
+  // Репост открыт всем участникам чата (мем с #мем улетает в канал).
 
   const message = ctx.message;
   if (!messageHasPhoto(message)) return;
