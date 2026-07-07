@@ -31,6 +31,14 @@ async function react(
   }
 }
 
+async function clearReaction(ctx: Context, chatId: number, messageId: number) {
+  try {
+    await ctx.telegram.setMessageReaction(chatId, messageId, []);
+  } catch (e) {
+    console.error("Не удалось снять реакцию:", e);
+  }
+}
+
 // Копирует мем в канал. Возвращает message_id поста в канале или null при ошибке.
 async function copyToChannel(
   ctx: Context,
@@ -93,19 +101,22 @@ async function replyWithChannelLink(
   }
 }
 
-// Копирует sourceMsgId в канал и, если успешно, ставит 👍 на reactMsgId и
-// отвечает ссылкой на пост. Возвращает message_id поста в канале или null.
+// Копирует sourceMsgId в канал. anchorMsgId — сообщение пользователя, на которое
+// вешаем отклик: сначала (сразу) 👍 для мгновенной обратной связи, потом, когда
+// пост скопирован, ссылку на него. Если копирование не удалось — снимаем 👍.
 async function repostAndConfirm(
   ctx: Context,
   chatId: number,
   sourceMsgId: number,
-  reactMsgId: number,
+  anchorMsgId: number,
   caption: string,
 ): Promise<number | null> {
+  await react(ctx, chatId, anchorMsgId, "👍");
   const channelMsgId = await copyToChannel(ctx, chatId, sourceMsgId, caption);
   if (channelMsgId !== null) {
-    await react(ctx, chatId, reactMsgId, "👍");
-    await replyWithChannelLink(ctx, chatId, reactMsgId, channelMsgId);
+    await replyWithChannelLink(ctx, chatId, anchorMsgId, channelMsgId);
+  } else {
+    await clearReaction(ctx, chatId, anchorMsgId);
   }
   return channelMsgId;
 }
@@ -145,22 +156,15 @@ async function tryAdminReplyRepost(
   const origCaption = "caption" in replied ? (replied.caption ?? "") : "";
   const finalCaption = caption || stripMemeTag(origCaption);
 
-  const channelMsgId = await repostAndConfirm(
+  // Источник для копирования — реплайнутое медиа; отклик (👍 + ссылку) вешаем
+  // на команду "мем" внизу, где админ её написал, чтобы он сразу его видел.
+  await repostAndConfirm(
     ctx,
     chatId,
     replied.message_id,
-    replied.message_id,
+    message.message_id,
     finalCaption,
   );
-
-  // Убираем сообщение-команду "мем", чтобы не засорять чат.
-  if (channelMsgId !== null) {
-    try {
-      await ctx.telegram.deleteMessage(chatId, message.message_id);
-    } catch {
-      // нет прав на удаление или сообщение уже удалено — не критично
-    }
-  }
   return true;
 }
 
