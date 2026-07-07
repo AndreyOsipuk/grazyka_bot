@@ -99,7 +99,8 @@ bot.on(pkg.message("text"), handleProfileWizardMessage);
 
 await launch(bot);
 
-startCleanupInactiveUsersCron(bot, 60);
+// Реже и мягче: крон делает по запросу на юзера с троттлингом, 60с флудили API.
+startCleanupInactiveUsersCron(bot, 1800);
 
 // Корректное завершение
 process.once("SIGINT", () => bot.stop("SIGINT"));
