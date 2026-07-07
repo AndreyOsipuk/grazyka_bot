@@ -30,12 +30,12 @@ export async function sendRequestToAdmins(
     "🔔 <b>Новый запрос на вступление в группу</b>",
     "",
     "<b>Информация о пользователе:</b>",
+    // ID копируемый; имя — ссылка на профиль (кликается, если приватность
+    // пользователя это разрешает; иначе Telegram отдаёт просто текст).
     `├ ID: <code>${userId}</code>`,
-    // Имя — кликабельная ссылка на профиль (работает и без username).
-    `├ Имя: <a href="tg://user?id=${userId}">${escapeHtml(u.first_name || "открыть профиль")}</a>`,
+    `├ Имя: <a href="tg://user?id=${userId}">${escapeHtml(u.first_name || "—")}</a>`,
     `├ Фамилия: ${u.last_name ? escapeHtml(u.last_name) : "—"}`,
     `├ Username: ${u.username ? "@" + escapeHtml(u.username) : "—"}`,
-    `├ Профиль: <a href="tg://user?id=${userId}">открыть</a>`,
     `├ Запросов: ${u.request_count || 1}`,
     "",
     `⚠️ Пользователь согласился с правилами, включая требование первого сообщения в течение ${pluralizeMinutesGenitive(TIME_LIMIT_MINUTES)} минут.`,
