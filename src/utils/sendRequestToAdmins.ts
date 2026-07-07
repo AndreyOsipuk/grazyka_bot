@@ -3,6 +3,7 @@ import { type Context, Markup } from "telegraf";
 import type { UserRequest } from "../types/types";
 import { ADMIN_GROUP_ID, TIME_LIMIT_MINUTES } from "./index";
 import { pluralizeMinutesGenitive } from "./pluralizeMinutes";
+import { saveRequest } from "./requests";
 
 // Клавиатура карточки запроса в админ-группе. Вынесена отдельно, чтобы покрыть
 // тестом набор кнопок и их callback_data.
@@ -51,11 +52,14 @@ export async function sendRequestToAdmins(
     });
 
     const prev = userRequests.get(userId) || {};
-    userRequests.set(userId, {
+    const record = {
       ...prev,
       adminMsg: { chatId: sent.chat.id, messageId: sent.message_id, text },
-      status: "pending",
-    });
+      status: "pending" as const,
+    };
+    userRequests.set(userId, record);
+    // дублируем в Redis, чтобы «Одобрить/Отклонить» пережили рестарт бота
+    await saveRequest(userId, record);
   } catch (e) {
     console.error(`Ошибка отправки в ADMIN_GROUP_ID=${ADMIN_GROUP_ID}:`, e);
   }

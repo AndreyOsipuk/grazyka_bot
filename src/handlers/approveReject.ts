@@ -9,6 +9,7 @@ import {
 import { closeAdminRequest } from "../utils/closeAdminRequest";
 import { generateNewInviteLink } from "../utils/generateNewInviteLink";
 import { pluralizeMinutesGenitive } from "../utils/pluralizeMinutes";
+import { deleteRequest, getRequest } from "../utils/requests";
 import { performBan } from "./ban";
 
 // Регекс callback-кнопок карточки запроса. Экспортируется, чтобы bot.ts и тесты
@@ -36,7 +37,16 @@ export const approveReject = async (ctx: ActionContext) => {
 
   const [, action, targetIdStr] = ctx.match;
   const targetId = Number(targetIdStr);
-  const userInfo = userRequests.get(targetId);
+
+  // Заявка могла пропасть из памяти после рестарта бота — тянем из Redis.
+  let userInfo = userRequests.get(targetId);
+  if (!userInfo) {
+    const fromRedis = await getRequest(targetId);
+    if (fromRedis) {
+      userInfo = fromRedis;
+      userRequests.set(targetId, fromRedis);
+    }
+  }
 
   if (!userInfo) {
     return ctx.editMessageText("❌ Пользователь не найден или запрос устарел.");
@@ -53,6 +63,9 @@ export const approveReject = async (ctx: ActionContext) => {
       show_alert: true,
     });
   }
+
+  // С этого момента заявка будет разрешена в любой ветке — убираем её из Redis.
+  await deleteRequest(targetId);
 
   if (action === "approve") {
     userInfo.approved = true;
