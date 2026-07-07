@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { hasMemeTag, stripMemeTag } from "./memeTag";
+import { hasMemeTag, parseMemeCommand, stripMemeTag } from "./memeTag";
 
 test("hasMemeTag: ловит тег в разных позициях и регистрах", () => {
   assert.equal(hasMemeTag("#мем"), true);
@@ -29,4 +29,28 @@ test("stripMemeTag: убирает тег, чистит пробелы", () => {
 
 test("stripMemeTag: не трогает похожие слова", () => {
   assert.equal(stripMemeTag("это #мемный контент"), "это #мемный контент");
+});
+
+test("parseMemeCommand: ловит команду и достаёт подпись", () => {
+  assert.deepEqual(parseMemeCommand("мем"), { isMeme: true, caption: "" });
+  assert.deepEqual(parseMemeCommand("мем смешная подпись"), {
+    isMeme: true,
+    caption: "смешная подпись",
+  });
+  assert.deepEqual(parseMemeCommand("#мем"), { isMeme: true, caption: "" });
+  assert.deepEqual(parseMemeCommand("/мем топ"), {
+    isMeme: true,
+    caption: "топ",
+  });
+  assert.deepEqual(parseMemeCommand("МЕМ TOP"), {
+    isMeme: true,
+    caption: "TOP",
+  });
+});
+
+test("parseMemeCommand: не срабатывает на похожем/постороннем", () => {
+  assert.equal(parseMemeCommand("мемный").isMeme, false);
+  assert.equal(parseMemeCommand("это мем").isMeme, false);
+  assert.equal(parseMemeCommand("").isMeme, false);
+  assert.equal(parseMemeCommand("привет").isMeme, false);
 });

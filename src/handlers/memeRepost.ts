@@ -4,11 +4,12 @@ import type { TelegramEmoji } from "telegraf/types";
 import {
   ADMIN_GROUP_ID,
   GROUP_ID,
+  isAdmin,
   MEME_CHANNEL_ID,
   MEME_CHANNEL_LINK,
 } from "../utils";
 import { isMemeBanned } from "../utils/memeBan";
-import { hasMemeTag, stripMemeTag } from "../utils/memeTag";
+import { hasMemeTag, parseMemeCommand, stripMemeTag } from "../utils/memeTag";
 import { messageHasPhoto } from "../utils/messageHasPhoto";
 
 // Чтобы не спамить админку на каждом меме при неверной настройке канала —
@@ -92,6 +93,77 @@ async function replyWithChannelLink(
   }
 }
 
+// Копирует sourceMsgId в канал и, если успешно, ставит 👍 на reactMsgId и
+// отвечает ссылкой на пост. Возвращает message_id поста в канале или null.
+async function repostAndConfirm(
+  ctx: Context,
+  chatId: number,
+  sourceMsgId: number,
+  reactMsgId: number,
+  caption: string,
+): Promise<number | null> {
+  const channelMsgId = await copyToChannel(ctx, chatId, sourceMsgId, caption);
+  if (channelMsgId !== null) {
+    await react(ctx, chatId, reactMsgId, "👍");
+    await replyWithChannelLink(ctx, chatId, reactMsgId, channelMsgId);
+  }
+  return channelMsgId;
+}
+
+// Админ отвечает "мем" (реплаем) на медиа → копируем то сообщение в канал.
+// Текст после "мем" становится подписью. Доступно только админам.
+async function tryAdminReplyRepost(
+  ctx: Context,
+  chatId: number,
+  userId: number,
+): Promise<boolean> {
+  const message = ctx.message;
+  if (!message) return false;
+
+  const replied =
+    "reply_to_message" in message ? message.reply_to_message : undefined;
+  const text = "text" in message ? (message.text ?? "") : "";
+  if (!replied || !text) return false;
+
+  const { isMeme, caption } = parseMemeCommand(text);
+  if (!isMeme) return false;
+  if (!isAdmin(userId)) return false;
+
+  if (!messageHasPhoto(replied)) {
+    try {
+      await ctx.telegram.sendMessage(
+        chatId,
+        "⚠️ Ответьте «мем» на сообщение с картинкой, видео или гифкой.",
+        { reply_parameters: { message_id: message.message_id } },
+      );
+    } catch {
+      // не смогли ответить — не критично
+    }
+    return true;
+  }
+
+  const origCaption = "caption" in replied ? (replied.caption ?? "") : "";
+  const finalCaption = caption || stripMemeTag(origCaption);
+
+  const channelMsgId = await repostAndConfirm(
+    ctx,
+    chatId,
+    replied.message_id,
+    replied.message_id,
+    finalCaption,
+  );
+
+  // Убираем сообщение-команду "мем", чтобы не засорять чат.
+  if (channelMsgId !== null) {
+    try {
+      await ctx.telegram.deleteMessage(chatId, message.message_id);
+    } catch {
+      // нет прав на удаление или сообщение уже удалено — не критично
+    }
+  }
+  return true;
+}
+
 export const memeRepost = async (ctx: Context) => {
   if (!MEME_CHANNEL_ID) return; // фича выключена
   if (!ctx.chat || ctx.chat.id !== GROUP_ID) return;
@@ -100,13 +172,17 @@ export const memeRepost = async (ctx: Context) => {
   if (!user || user.is_bot) return;
   if (!ctx.message) return;
 
+  const chatId = ctx.chat.id;
+
+  // Ветка админа: reply "мем" на медиа.
+  if (await tryAdminReplyRepost(ctx, chatId, user.id)) return;
+
+  // Обычная ветка: медиа с #мем в подписи (доступно всем).
   const message = ctx.message;
   if (!messageHasPhoto(message)) return;
 
   const caption = "caption" in message ? (message.caption ?? "") : "";
   if (!hasMemeTag(caption)) return;
-
-  const chatId = ctx.chat.id;
 
   // Забаненному по мемам — не репостим, ставим 👎 вместо 👍.
   if (await isMemeBanned(user.id)) {
@@ -114,15 +190,11 @@ export const memeRepost = async (ctx: Context) => {
     return;
   }
 
-  const channelMsgId = await copyToChannel(
+  await repostAndConfirm(
     ctx,
     chatId,
     message.message_id,
+    message.message_id,
     stripMemeTag(caption),
   );
-
-  if (channelMsgId !== null) {
-    await react(ctx, chatId, message.message_id, "👍");
-    await replyWithChannelLink(ctx, chatId, message.message_id, channelMsgId);
-  }
 };

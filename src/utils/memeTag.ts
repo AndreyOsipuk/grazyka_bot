@@ -23,3 +23,17 @@ export function stripMemeTag(text: string): string {
     .replace(/\n{3,}/g, "\n\n")
     .trim();
 }
+
+// Команда-ответ "мем" (или "#мем" / "/мем") в начале сообщения. Всё, что идёт
+// после неё — необязательная подпись для поста в канале. "мемный" не срабатывает.
+const memeCommandRe = /^\s*(?:[#/])?мем(?![\p{L}\p{N}_])\s*/iu;
+
+export function parseMemeCommand(text: string): {
+  isMeme: boolean;
+  caption: string;
+} {
+  if (!text) return { isMeme: false, caption: "" };
+  const m = memeCommandRe.exec(text);
+  if (!m) return { isMeme: false, caption: "" };
+  return { isMeme: true, caption: text.slice(m[0].length).trim() };
+}
