@@ -1,7 +1,7 @@
 import { type Context, Markup } from "telegraf";
 
 import type { UserRequest } from "../types/types";
-import { ADMIN_GROUP_ID, TIME_LIMIT_MINUTES } from "./index";
+import { ADMIN_GROUP_ID, escapeHtml, TIME_LIMIT_MINUTES } from "./index";
 import { pluralizeMinutesGenitive } from "./pluralizeMinutes";
 import { saveRequest } from "./requests";
 
@@ -31,9 +31,11 @@ export async function sendRequestToAdmins(
     "",
     "<b>Информация о пользователе:</b>",
     `├ ID: <code>${userId}</code>`,
-    `├ Имя: ${u.first_name || "—"}`,
-    `├ Фамилия: ${u.last_name || "—"}`,
-    `└ Username: @${u.username || "—"}`,
+    // Имя — кликабельная ссылка на профиль (работает и без username).
+    `├ Имя: <a href="tg://user?id=${userId}">${escapeHtml(u.first_name || "открыть профиль")}</a>`,
+    `├ Фамилия: ${u.last_name ? escapeHtml(u.last_name) : "—"}`,
+    `├ Username: ${u.username ? "@" + escapeHtml(u.username) : "—"}`,
+    `├ Профиль: <a href="tg://user?id=${userId}">открыть</a>`,
     `├ Запросов: ${u.request_count || 1}`,
     "",
     `⚠️ Пользователь согласился с правилами, включая требование первого сообщения в течение ${pluralizeMinutesGenitive(TIME_LIMIT_MINUTES)} минут.`,
