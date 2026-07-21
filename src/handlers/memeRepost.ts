@@ -153,8 +153,10 @@ async function tryAdminReplyRepost(
     return true;
   }
 
-  const origCaption = "caption" in replied ? (replied.caption ?? "") : "";
-  const finalCaption = caption || stripMemeTag(origCaption);
+  // Оригинальную подпись реплайнутого сообщения в канал НЕ тащим (её могли
+  // переслать откуда угодно) — берём только явный текст после "мем", если он
+  // есть; иначе публикуем чистое медиа без подписи.
+  const finalCaption = caption;
 
   // Источник для копирования — реплайнутое медиа; отклик (👍 + ссылку) вешаем
   // на команду "мем" внизу, где админ её написал, чтобы он сразу его видел.
