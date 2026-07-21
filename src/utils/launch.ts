@@ -11,6 +11,7 @@ export const launch = async (bot: Telegraf) => {
       { command: "start", description: "Начать" },
       { command: "help", description: "Список команд" },
       { command: "rules", description: "Показать правила группы" },
+      { command: "suggest", description: "Предложить мем в канал" },
       { command: "anketa", description: "Создать или обновить анкету" },
       { command: "myprofile", description: "Показать мою анкету" },
       {

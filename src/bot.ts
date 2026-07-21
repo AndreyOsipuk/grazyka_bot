@@ -25,6 +25,13 @@ import { reset } from "./handlers/reset";
 import { rules } from "./handlers/rules";
 import { start } from "./handlers/start";
 import { stats } from "./handlers/stats";
+import {
+  suggestApprove,
+  suggestCommand,
+  suggestOffer,
+  suggestOnMedia,
+  suggestReject,
+} from "./handlers/suggest";
 import { unban, unbanAction } from "./handlers/unban";
 import { whois } from "./handlers/whois";
 import { AppTypes } from "./types/types";
@@ -75,6 +82,7 @@ bot.command("banned", bannedList);
 bot.command("memeban", memeBan);
 bot.command("memeunban", memeUnban);
 bot.command("memebanned", memeBannedList);
+bot.command("suggest", suggestCommand);
 
 bot.action(/^profiles:/, profilesInlineFilter);
 bot.action(/^banned:p=(\d+)$/, bannedListPage);
@@ -82,6 +90,9 @@ bot.action(/^unban_(\d+)$/, unbanAction);
 bot.action(/^qban_(\d+)$/, quickBan);
 bot.action(/^memebanned:p=(\d+)$/, memeBannedListPage);
 bot.action(/^memeunban_(\d+)$/, memeUnbanAction);
+bot.action(/^sugoffer_(\d+)$/, suggestOffer);
+bot.action(/^sugok_(\d+)_(\d+)$/, suggestApprove);
+bot.action(/^sugno_(\d+)_(\d+)$/, suggestReject);
 bot.action("report_claim", reportClaim);
 bot.action("agree_rules", async (ctx) => agreeRules(ctx, bot));
 
@@ -93,6 +104,7 @@ bot.on(pkg.message("new_chat_members"), newChatMembers as never);
 bot.on("message", async (ctx) => {
   await chatMessage(ctx);
   await memeRepost(ctx);
+  await suggestOnMedia(ctx);
   await logCombotModeration(ctx);
 });
 bot.on(pkg.message("text"), handleProfileWizardMessage);
