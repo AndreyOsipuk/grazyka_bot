@@ -28,7 +28,6 @@ import { stats } from "./handlers/stats";
 import {
   suggestApprove,
   suggestCommand,
-  suggestOffer,
   suggestOnMedia,
   suggestReject,
 } from "./handlers/suggest";
@@ -90,7 +89,6 @@ bot.action(/^unban_(\d+)$/, unbanAction);
 bot.action(/^qban_(\d+)$/, quickBan);
 bot.action(/^memebanned:p=(\d+)$/, memeBannedListPage);
 bot.action(/^memeunban_(\d+)$/, memeUnbanAction);
-bot.action(/^sugoffer_(\d+)$/, suggestOffer);
 bot.action(/^sugok_(\d+)_(\d+)$/, suggestApprove);
 bot.action(/^sugno_(\d+)_(\d+)$/, suggestReject);
 bot.action("report_claim", reportClaim);

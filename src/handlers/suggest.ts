@@ -32,7 +32,7 @@ export const suggestCommand = async (ctx: Context) => {
   );
 };
 
-// Юзер прислал медиа в личку → предлагаем отправить в канал (кнопкой).
+// Юзер прислал медиа в личку → сразу шлём его в админ-группу на модерацию.
 export const suggestOnMedia = async (ctx: Context) => {
   if (!MEME_CHANNEL_ID) return;
   const chat = ctx.chat;
@@ -42,33 +42,12 @@ export const suggestOnMedia = async (ctx: Context) => {
   if (!ctx.message) return;
   if (!messageHasPhoto(ctx.message)) return;
 
-  await ctx.reply("Предложить этот мем в канал мемов?", {
-    reply_parameters: { message_id: ctx.message.message_id },
-    reply_markup: {
-      inline_keyboard: [
-        [
-          {
-            text: "📨 Предложить",
-            callback_data: `sugoffer_${ctx.message.message_id}`,
-          },
-        ],
-      ],
-    },
-  });
-};
-
-// Юзер нажал «Предложить» → копируем медиа в админ-группу с кнопками модерации.
-export const suggestOffer = async (ctx: ActionContext) => {
-  const user = ctx.from;
-  if (!user) return;
-
   if (await isMemeBanned(user.id)) {
-    return ctx.answerCbQuery("Тебе нельзя предлагать мемы.", {
-      show_alert: true,
-    });
+    await ctx.reply("Тебе нельзя предлагать мемы.");
+    return;
   }
 
-  const mediaMsgId = Number(ctx.match[1]);
+  const mediaMsgId = ctx.message.message_id;
   const tag = formatUserTag(user.id, user);
 
   try {
@@ -92,17 +71,14 @@ export const suggestOffer = async (ctx: ActionContext) => {
     });
   } catch (e) {
     console.error("Ошибка отправки предложки на модерацию:", e);
-    return ctx.answerCbQuery("Не получилось отправить, попробуй ещё раз.", {
-      show_alert: true,
-    });
+    await ctx.reply("Не получилось отправить на модерацию, попробуй позже.");
+    return;
   }
 
-  await ctx.answerCbQuery("Отправлено на модерацию!");
-  try {
-    await ctx.editMessageText("✅ Отправлено на модерацию. Спасибо!");
-  } catch {
-    // сообщение могли изменить/удалить — не критично
-  }
+  await ctx.reply(
+    "📨 Отправил твой мем админам на модерацию! Если одобрят - появится в канале.",
+    { reply_parameters: { message_id: mediaMsgId } },
+  );
 };
 
 // Админ одобрил предложку → публикуем медиа в канал и уведомляем автора.
