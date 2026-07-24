@@ -136,7 +136,7 @@ async function tryAdminReplyRepost(
   const text = "text" in message ? (message.text ?? "") : "";
   if (!replied || !text) return false;
 
-  const { isMeme, caption } = parseMemeCommand(text);
+  const { isMeme } = parseMemeCommand(text);
   if (!isMeme) return false;
   if (!isAdmin(userId)) return false;
 
@@ -153,10 +153,9 @@ async function tryAdminReplyRepost(
     return true;
   }
 
-  // Оригинальную подпись реплайнутого сообщения в канал НЕ тащим (её могли
-  // переслать откуда угодно) — берём только явный текст после "мем", если он
-  // есть; иначе публикуем чистое медиа без подписи.
-  const finalCaption = caption;
+  // В канал уходит только медиа — подпись убираем всегда (ни оригинальную, ни
+  // текст после "мем" не переносим).
+  const finalCaption = "";
 
   // Источник для копирования — реплайнутое медиа; отклик (👍 + ссылку) вешаем
   // на команду "мем" внизу, где админ её написал, чтобы он сразу его видел.
