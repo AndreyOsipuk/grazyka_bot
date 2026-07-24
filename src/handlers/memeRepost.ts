@@ -9,7 +9,7 @@ import {
   MEME_CHANNEL_LINK,
 } from "../utils";
 import { isMemeBanned } from "../utils/memeBan";
-import { hasMemeTag, parseMemeCommand, stripMemeTag } from "../utils/memeTag";
+import { hasMemeTag, parseMemeCommand } from "../utils/memeTag";
 import { messageHasPhoto } from "../utils/messageHasPhoto";
 
 // Чтобы не спамить админку на каждом меме при неверной настройке канала —
@@ -196,11 +196,12 @@ export const memeRepost = async (ctx: Context) => {
     return;
   }
 
+  // В канал уходит только медиа — подпись целиком убираем (пустая строка).
   await repostAndConfirm(
     ctx,
     chatId,
     message.message_id,
     message.message_id,
-    stripMemeTag(caption),
+    "",
   );
 };
