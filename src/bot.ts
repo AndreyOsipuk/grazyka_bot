@@ -9,6 +9,7 @@ import { APPROVE_REJECT_BAN_RE, approveReject } from "./handlers/approveReject";
 import { ban, quickBan } from "./handlers/ban";
 import { bannedList, bannedListPage } from "./handlers/banned";
 import { chatId } from "./handlers/chatid";
+import { onChatMember } from "./handlers/chatMember";
 import { chatMessage } from "./handlers/chatMessage";
 import { help } from "./handlers/help";
 import {
@@ -98,6 +99,7 @@ if (appType == AppTypes.gryzuka) {
   bot.action(APPROVE_REJECT_BAN_RE, approveReject);
 }
 
+bot.on("chat_member", onChatMember);
 bot.on(pkg.message("new_chat_members"), newChatMembers as never);
 bot.on("message", async (ctx) => {
   await chatMessage(ctx);

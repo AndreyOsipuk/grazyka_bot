@@ -133,7 +133,17 @@ export const launch = async (bot: Telegraf) => {
   }
 
   try {
-    bot.launch();
+    // allowedUpdates нужно перечислять полностью — chat_member по умолчанию
+    // Telegram не шлёт, а он нужен для синка выхода/кика участников.
+    bot.launch({
+      allowedUpdates: [
+        "message",
+        "edited_message",
+        "callback_query",
+        "my_chat_member",
+        "chat_member",
+      ],
+    });
     console.log("✅ Бот запущен (Telegraf, polling).");
   } catch (e) {
     console.log("Ошибка запуска", e);

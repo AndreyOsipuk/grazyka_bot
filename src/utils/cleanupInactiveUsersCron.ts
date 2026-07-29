@@ -65,8 +65,8 @@ export function startCleanupInactiveUsersCron(bot: Bot, intervalSec = 1800) {
 
   let running = false;
 
-  setInterval(async () => {
-    // Не запускаем новый проход, пока не закончился предыдущий.
+  // Не запускаем новый проход, пока не закончился предыдущий.
+  const runGuarded = async () => {
     if (running) return;
     running = true;
     try {
@@ -76,5 +76,10 @@ export function startCleanupInactiveUsersCron(bot: Bot, intervalSec = 1800) {
     } finally {
       running = false;
     }
-  }, intervalSec * 1000);
+  };
+
+  setInterval(runGuarded, intervalSec * 1000);
+  // Разовый прогон вскоре после старта — подчистить тех, кто вышел/был кикнут,
+  // пока бот перезапускался (chat_member тогда не долетел).
+  setTimeout(runGuarded, 60_000);
 }
