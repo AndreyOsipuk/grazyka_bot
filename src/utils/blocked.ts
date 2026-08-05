@@ -38,6 +38,12 @@ export async function unblockUser(userId: number | string): Promise<void> {
   await redis.del(blockedKey(userId));
 }
 
+// Есть ли юзер в нашем реестре намеренных банов (кнопка «Забанить», /ban).
+// Кики (Combot/руками) сюда НЕ попадают.
+export async function isBlocked(userId: number | string): Promise<boolean> {
+  return (await redis.exists(blockedKey(userId))) === 1;
+}
+
 export async function getBlocked(
   userId: number | string,
 ): Promise<Blocked | null> {

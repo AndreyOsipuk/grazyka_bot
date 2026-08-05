@@ -4,9 +4,8 @@ import { appType } from "../const";
 import { userInviteLinks, userRequests } from "../core";
 import { AppTypes } from "../types/types";
 import { GROUP_ID } from "../utils";
-import { BANNED_USER_MESSAGE } from "../utils/blocked";
+import { BANNED_USER_MESSAGE, isBlocked } from "../utils/blocked";
 import { generateNewInviteLink } from "../utils/generateNewInviteLink";
-import { isUserBanned } from "../utils/isUserBanned";
 import { isUserInChat } from "../utils/isUserInChat";
 import { sendRequestToAdmins } from "../utils/sendRequestToAdmins";
 
@@ -24,11 +23,24 @@ export const agreeRules = async (ctx: Context, bot: Telegraf) => {
     return;
   }
 
-  if (await isUserBanned(ctx, GROUP_ID, userId)) {
+  // Блокируем перезаход ТОЛЬКО тем, кого мы забанили намеренно (наш реестр).
+  // Обычный кик (Combot/руками) оставляет в Telegram статус kicked, но в нашем
+  // банлисте таких нет — им перезаход разрешаем.
+  if (await isBlocked(userId)) {
     // Забаненному отвечаем ему самому и НЕ шумим в админ-группу —
     // иначе спамер задолбит админов повторными попытками.
     await ctx.editMessageText(BANNED_USER_MESSAGE);
     return;
+  }
+
+  // Если человека когда-то кикнули (в Telegram он kicked), но у нас он не в
+  // бане — снимаем Telegram-кик, иначе он не сможет войти по ссылке.
+  try {
+    await ctx.telegram.unbanChatMember(GROUP_ID, userId, {
+      only_if_banned: true,
+    });
+  } catch (e) {
+    console.error("Не удалось снять kick перед вступлением:", e);
   }
 
   const data = userRequests.get(user.id) || {
