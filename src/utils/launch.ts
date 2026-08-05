@@ -132,20 +132,32 @@ export const launch = async (bot: Telegraf) => {
     );
   }
 
-  try {
-    // allowedUpdates нужно перечислять полностью — chat_member по умолчанию
-    // Telegram не шлёт, а он нужен для синка выхода/кика участников.
-    bot.launch({
-      allowedUpdates: [
-        "message",
-        "edited_message",
-        "callback_query",
-        "my_chat_member",
-        "chat_member",
-      ],
-    });
-    console.log("✅ Бот запущен (Telegraf, polling).");
-  } catch (e) {
-    console.log("Ошибка запуска", e);
-  }
+  // allowedUpdates нужно перечислять полностью — chat_member по умолчанию
+  // Telegram не шлёт, а он нужен для синка выхода/кика участников.
+  const startPolling = () => {
+    bot
+      .launch({
+        allowedUpdates: [
+          "message",
+          "edited_message",
+          "callback_query",
+          "my_chat_member",
+          "chat_member",
+        ],
+      })
+      .catch((e) => {
+        // 409 Conflict бывает при рестарте: старый инстанс ещё держит getUpdates.
+        // Не падаем (иначе pm2 крутит краш-луп) — ждём и пробуем снова.
+        const code = (e as { response?: { error_code?: number } })?.response
+          ?.error_code;
+        console.error(
+          `Ошибка поллинга (${code ?? "?"}), повтор через 5с:`,
+          (e as Error)?.message || e,
+        );
+        setTimeout(startPolling, 5000);
+      });
+  };
+
+  startPolling();
+  console.log("✅ Бот запущен (Telegraf, polling).");
 };
