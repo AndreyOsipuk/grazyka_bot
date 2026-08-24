@@ -51,7 +51,7 @@ export async function stats(ctx: CommandContext) {
     return ctx.reply("🚫 Общую статистику могут запрашивать только админы");
   }
 
-  const days = arg && /^\d+$/.test(arg) ? parseInt(arg, 10) || 30 : 30;
+  const days = arg && /^\d+$/.test(arg) ? parseInt(arg, 10) || 14 : 14;
 
   const ids = await getAllActiveUserIds();
   const inactiveUsers: { id: string; displayName: string; diffDays: number }[] =
