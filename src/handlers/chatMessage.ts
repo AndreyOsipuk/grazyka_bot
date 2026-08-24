@@ -26,12 +26,13 @@ export const chatMessage = async (ctx: Context) => {
   const fm = userFirstMessages.get(user.id);
 
   if (fm === false || fm === null) {
-    if (!messageHasPhoto(ctx.message)) {
-      const mem = appType === AppTypes.gryzuka ? "мем 18+" : "алко-мем";
+    // gryzuka: первым сообщением требуем фото/мем. alco мягче — засчитываем
+    // любое первое сообщение (фото не обязательно).
+    if (appType === AppTypes.gryzuka && !messageHasPhoto(ctx.message)) {
       await ctx.replyWithHTML(
         [
           `⚠️ <a href="tg://user?id=${user.id}">${escapeHtml(user.first_name || "гость")}</a>,`,
-          `первое сообщение должно содержать фото (или ${mem}) 📸.`,
+          `первое сообщение должно содержать фото (или мем 18+) 📸.`,
           `Отправьте фото, иначе вы будете забанены через ${pluralizeMinutes(TIME_LIMIT_MINUTES)} после вступления.`,
         ].join("\n"),
       );
