@@ -19,6 +19,7 @@ import {
   memeUnban,
   memeUnbanAction,
 } from "./handlers/memeBan";
+import { memeModDecision } from "./handlers/memeModeration";
 import { memeRepost } from "./handlers/memeRepost";
 import { newChatMembers } from "./handlers/newChatMembers";
 import { report } from "./handlers/report";
@@ -39,6 +40,7 @@ import { BOT_TOKEN } from "./utils";
 import { startCleanupInactiveUsersCron } from "./utils/cleanupInactiveUsersCron";
 import { launch } from "./utils/launch";
 import { logCombotModeration } from "./utils/logCombotActions";
+import { MEME_MOD_RE } from "./utils/memeModeration";
 import { deleteProfileByAdmin } from "./utils/profiles/deleteProfileByAdmin";
 import { findProfiles } from "./utils/profiles/findProfiles";
 import { listWithoutProfiles } from "./utils/profiles/listWithoutProfiles";
@@ -90,6 +92,7 @@ bot.action(/^unban_(\d+)$/, unbanAction);
 bot.action(/^qban_(\d+)$/, quickBan);
 bot.action(/^memebanned:p=(\d+)$/, memeBannedListPage);
 bot.action(/^memeunban_(\d+)$/, memeUnbanAction);
+bot.action(MEME_MOD_RE, memeModDecision);
 bot.action(/^sugok_(\d+)_(\d+)$/, suggestApprove);
 bot.action(/^sugno_(\d+)_(\d+)$/, suggestReject);
 bot.action("report_claim", reportClaim);

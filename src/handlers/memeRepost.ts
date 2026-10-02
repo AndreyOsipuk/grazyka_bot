@@ -11,6 +11,7 @@ import {
 import { isMemeBanned } from "../utils/memeBan";
 import { hasMemeTag, parseMemeCommand } from "../utils/memeTag";
 import { messageHasPhoto } from "../utils/messageHasPhoto";
+import { submitMemeForModeration } from "./memeModeration";
 
 // Чтобы не спамить админку на каждом меме при неверной настройке канала —
 // уведомляем об ошибке канала один раз за сессию.
@@ -182,7 +183,7 @@ export const memeRepost = async (ctx: Context) => {
   // Ветка админа: reply "мем" на медиа.
   if (await tryAdminReplyRepost(ctx, chatId, user.id)) return;
 
-  // Обычная ветка: медиа с #мем в подписи (доступно всем).
+  // Обычная ветка: медиа с #мем в подписи.
   const message = ctx.message;
   if (!messageHasPhoto(message)) return;
 
@@ -195,12 +196,18 @@ export const memeRepost = async (ctx: Context) => {
     return;
   }
 
-  // В канал уходит только медиа — подпись целиком убираем (пустая строка).
-  await repostAndConfirm(
-    ctx,
-    chatId,
-    message.message_id,
-    message.message_id,
-    "",
-  );
+  // Мемы админов публикуем сразу (только медиа, подпись убираем целиком).
+  if (isAdmin(user.id)) {
+    await repostAndConfirm(
+      ctx,
+      chatId,
+      message.message_id,
+      message.message_id,
+      "",
+    );
+    return;
+  }
+
+  // Остальные — через модерацию в админ-чате.
+  await submitMemeForModeration(ctx, message.message_id, user);
 };
