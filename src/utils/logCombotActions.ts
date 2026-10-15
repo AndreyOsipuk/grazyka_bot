@@ -1,9 +1,44 @@
 import type { Context } from "telegraf";
 
 import { ADMIN_GROUP_ID, escapeHtml, GROUP_ID, isAdmin } from "./index";
+import { buildChatMessageLink } from "./memeModeration";
 
 // Разрешённые админские команды
 const MODERATION_COMMAND_RE = /^!(warn|mute|unmute|ban|unban|kick|restrict)\b/i;
+
+type ModerationLog = {
+  adminMention: string;
+  command: string;
+  targetMention: string;
+  // ссылка на сообщение, к которому относится команда (может быть пустой)
+  link: string;
+};
+
+export function buildModerationLogText(p: ModerationLog): string {
+  return [
+    `🛡 <b>Админское действие</b>`,
+    `👮 Админ: ${p.adminMention}`,
+    `💬 Команда: <code>${escapeHtml(p.command)}</code>`,
+    `🎯 Цель: ${p.targetMention}`,
+    ...(p.link ? [`🔗 <a href="${p.link}">Перейти к сообщению</a>`] : []),
+  ].join("\n");
+}
+
+type MentionUser = { id: number; username?: string; first_name?: string };
+
+function mentionOf(u: MentionUser): string {
+  return u.username
+    ? `@${u.username}`
+    : `<a href="tg://user?id=${u.id}">${escapeHtml(u.first_name || "user")}</a>`;
+}
+
+// Цель команды: автор сообщения, на которое ответили (лучший вариант), иначе
+// @username из текста команды (!warn @androsible).
+function resolveTarget(replyFrom: MentionUser | undefined, text: string) {
+  if (replyFrom) return mentionOf(replyFrom);
+  const m = text.match(/@(\w+)/);
+  return m ? `@${m[1]}` : "— неизвестно —";
+}
 
 export const logCombotModeration = async (ctx: Context) => {
   const chat = ctx.chat;
@@ -15,16 +50,15 @@ export const logCombotModeration = async (ctx: Context) => {
   // Нужны только админы
   if (!isAdmin(from.id)) return;
 
-  const msg: any = ctx.message;
+  // Нет отдельного админ-чата (как у алкобота: ADMIN_GROUP_ID = сам чат) —
+  // лог ушёл бы в общий чат, поэтому не шлём.
+  if (ADMIN_GROUP_ID === GROUP_ID) return;
+
+  const msg = ctx.message;
   if (!msg) return;
 
-  const text: string | undefined =
-    ("text" in msg && msg.text) ||
-    ("caption" in msg && msg.caption) ||
-    undefined;
-
-  if (!text) return;
-
+  const text =
+    ("text" in msg && msg.text) || ("caption" in msg && msg.caption) || "";
   const trimmed = text.trim();
 
   // Проверяем, что это модераторская команда
@@ -33,41 +67,24 @@ export const logCombotModeration = async (ctx: Context) => {
 
   const command = cmdMatch[0]; // например "!warn"
 
-  // 🎯 Определяем, на кого была команда:
-  let targetMention = "— неизвестно —";
-  let targetId: number | undefined;
+  const reply = "reply_to_message" in msg ? msg.reply_to_message : undefined;
+  const targetMention = resolveTarget(reply?.from, trimmed);
+  const adminMention = mentionOf(from);
 
-  // 1) Если команда в ответ на сообщение → это лучший вариант
-  if (msg.reply_to_message?.from) {
-    const t = msg.reply_to_message.from;
-    targetId = t.id;
-    targetMention = t.username
-      ? `@${t.username}`
-      : `<a href="tg://user?id=${t.id}">${escapeHtml(t.first_name || "user")}</a>`;
+  // Ссылка на сообщение нарушителя, если команда была ответом, иначе на саму
+  // команду — чтобы из админки можно было перейти к контексту.
+  const link = buildChatMessageLink(
+    chat.id,
+    reply?.message_id ?? msg.message_id,
+  );
+
+  try {
+    await ctx.telegram.sendMessage(
+      ADMIN_GROUP_ID,
+      buildModerationLogText({ adminMention, command, targetMention, link }),
+      { parse_mode: "HTML", link_preview_options: { is_disabled: true } },
+    );
+  } catch (e) {
+    console.error("Не удалось отправить лог админского действия:", e);
   }
-
-  // 2) Если команда через @username (!warn @androsible)
-  if (!targetId) {
-    const m = trimmed.match(/@([a-zA-Z0-9_]+)/);
-    if (m) {
-      targetMention = `@${m[1]}`;
-    }
-  }
-
-  // 📝 Формируем красивый лог в админский чат
-  const adminMention = from.username
-    ? `@${from.username}`
-    : `<a href="tg://user?id=${from.id}">${escapeHtml(from.first_name)}</a>`;
-
-  const formatted = [
-    `🛡 <b>Админское действие</b>`,
-    `👮 Админ: ${adminMention}`,
-    `💬 Команда: <code>${escapeHtml(command)}</code>`,
-    `🎯 Цель: ${targetMention}`,
-    "",
-  ].join("\n");
-
-  await ctx.telegram.sendMessage(ADMIN_GROUP_ID, formatted, {
-    parse_mode: "HTML",
-  });
 };
