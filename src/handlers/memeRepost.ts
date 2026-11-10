@@ -59,6 +59,22 @@ async function copyToChannel(
     return res.message_id;
   } catch (e) {
     console.error("Ошибка репоста мема в канал:", e);
+    const errText = String((e as Error)?.message || e);
+    // MESSAGE_ID_INVALID / message to copy not found — исходное сообщение
+    // в чате уже удалено (автором или антиспамом). С каналом всё в порядке,
+    // поэтому флаг «ошибка канала» не тратим и сообщаем в чат по месту.
+    if (/MESSAGE_ID_INVALID|message to copy not found/i.test(errText)) {
+      try {
+        await ctx.telegram.sendMessage(
+          chatId,
+          "⚠️ Не удалось запостить мем: исходное сообщение уже удалено из чата.",
+          { disable_notification: true },
+        );
+      } catch {
+        // не критично
+      }
+      return null;
+    }
     if (!notifiedChannelError) {
       notifiedChannelError = true;
       try {
